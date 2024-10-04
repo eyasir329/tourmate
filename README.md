@@ -116,22 +116,22 @@ The **Tour and Hotel Management App** is designed to streamline the management o
 
 ## Necessary Pages
 
-| Categories     | Pages                                                  |
-| -------------- | ------------------------------------------------------ |
-| Landing Page   | /                                                      |
-| Bookings       | /bookings                                              |
-| Cabins         | /cabins                                                |
-| Guests         | /guest                                                 |
-| Admin          | /admin                                                 |
-| Employees      | /employee                                              |
-| Managers       | /manager                                               |
-| Dashboard      | /dashboard                                             |
-|                | Note that this one will combine other features as well |
-| Check in/out   | /checkin/:bookingId                                    |
-| App Settings   | /settings                                              |
-| Authentication | /users                                                 |
-|                | /login                                                 |
-|                | /account                                               |
+| Categories          | Pages                                                  |
+| ------------------- | ------------------------------------------------------ |
+| Landing Page (Home) | /                                                      |
+| Bookings            | /bookings                                              |
+| Cabins              | /cabins                                                |
+| Guests              | /guests                                                |
+| Admin               | /admin                                                 |
+| Employees           | /employees                                             |
+| Managers            | /managers                                              |
+| Dashboard           | /dashboard                                             |
+|                     | Note that this one will combine other features as well |
+| Check in/out        | /checkin/:bookingId                                    |
+| App Settings        | /settings                                              |
+| Authentication      | /users                                                 |
+|                     | /login                                                 |
+|                     | /account                                               |
 
 ## Technology Stack
 
@@ -148,7 +148,9 @@ The **Tour and Hotel Management App** is designed to streamline the management o
 
 ## Project Setup
 
-    npm create vite@latest
+It's initial project setup. We do not need it when we clone this project.
+
+    npm create vite@latest //5.5.3
     ...
     (base)  eyasir329@eyasirPC  ~/Documents/GitHub  npm create vite@latest
     Need to install the following packages:
@@ -174,17 +176,19 @@ The **Tour and Hotel Management App** is designed to streamline the management o
 
 ## Installation & Setup
 
-1. Clone the repository:
+Clone the repository:
 
-   ```bash
-   git clone https://github.com/eyasir329/tourmate.git
-   cd tourmate
-   npm i
-   npm run dev
-   ```
+```bash
+git clone https://github.com/eyasir329/tourmate.git
+cd tourmate
+npm i
+npm run dev
+```
 
 ## Folder Structure
 
 ![folder_structure](https://i.ibb.co.com/Q9CvXrz/Screenshot-from-2024-10-04-17-42-09.png)
 
-..
+## Setting up Routes and Pages
+
+For this purpose, we are using **react-router-dom**
