@@ -186,3 +186,5 @@ The **Tour and Hotel Management App** is designed to streamline the management o
 ## Folder Structure
 
 ![folder_structure](https://i.ibb.co.com/Q9CvXrz/Screenshot-from-2024-10-04-17-42-09.png)
+
+..
