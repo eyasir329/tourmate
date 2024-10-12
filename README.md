@@ -256,6 +256,13 @@ npm i react-router-dom
         </Routes>
       </BrowserRouter>
 
-## Dashboard Layout
+## App Layout
+
+Necessary package,
+<code>npm i react-icons</code>
+
+Using CSS Grid, to make <code>AppLayout.jsx</code> app layout.
+
+![app-layout](https://i.ibb.co.com/m4Rv24Y/Screenshot-from-2024-10-12-17-56-53.png)
 
 <code>Dashboard.jsx</code>
