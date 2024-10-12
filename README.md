@@ -2,7 +2,7 @@
 
 **Make your tour easier using our platform.**
 
-Note: Make these project while learning react development, and make as a project of my 3rd Year, 1st Semester - Software Engineering Lab.
+**_Note:_** _Make these project while learning react development, and make as a project of my 3rd Year, 1st Semester - Software Engineering Lab. It's a extended version of [the-wild-oasis](https://the-wild-oasis-website.vercel.app/) project_
 
 ## Project Overview
 
@@ -116,22 +116,22 @@ The **Tour and Hotel Management App** is designed to streamline the management o
 
 ## Necessary Pages
 
-| Categories          | Pages                                                  |
-| ------------------- | ------------------------------------------------------ |
-| Landing Page (Home) | /                                                      |
-| Bookings            | /bookings                                              |
-| Cabins              | /cabins                                                |
-| Guests              | /guests                                                |
-| Admin               | /admin                                                 |
-| Employees           | /employees                                             |
-| Managers            | /managers                                              |
-| Dashboard           | /dashboard                                             |
-|                     | Note that this one will combine other features as well |
-| Check in/out        | /checkin/:bookingId                                    |
-| App Settings        | /settings                                              |
-| Authentication      | /users                                                 |
-|                     | /login                                                 |
-|                     | /account                                               |
+| Categories     | Pages               | Works                          |
+| -------------- | ------------------- | ------------------------------ |
+| Landing Page   | /                   | front page. visible for public |
+| Bookings       | /bookings           | booking management             |
+| Cabins         | /cabins             | cabin management               |
+| Guests         | /guests             | guest homepage                 |
+| Admin          | /admin              | admin homepage                 |
+| Managers       | /managers           | manager homepage               |
+| Employees      | /employees          | employee homepage              |
+| Dashboard      | /dashboard          | dashboard of each user         |
+| Check in/out   | /checkin/:bookingId | check in/out management        |
+| App Settings   | /settings           | hotel setting                  |
+| Authentication | /users              | user info                      |
+|                | /account            | account info..basically login  |
+|                | /signup             | signup page for guest          |
+|                | /login              | login page for all user        |
 
 ## Technology Stack
 
@@ -191,4 +191,71 @@ npm run dev
 
 ## Setting up Routes and Pages
 
-For this purpose, we are using **react-router-dom**
+For this purpose, we are using **react-router-dom** package.
+<code>
+npm i react-router-dom
+</code>
+
+<code>App.jsx</code>
+
+    <BrowserRouter>
+        <Routes>
+          <Route index element={<Home />} />
+          {/* main app */}
+          <Route path="/app" element={<AppLayout />}>
+            {/* admin */}
+            <Route path="admin" element={<Admin />}>
+              <Route index element={<Navigate replace to="dashboard" />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="account" element={<Account />} />
+              <Route path="create_hotel" element={<CreateHotel />} />
+              <Route path="delete_hotel" element={<DeleteHotel />} />
+              <Route path="*" element={<PageNotFound />} />{" "}
+            </Route>
+            {/* manager */}
+            <Route path="manager" element={<Manager />}>
+              <Route index element={<Navigate replace to="dashboard" />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="account" element={<Account />} />
+              <Route path="bookings" element={<Bookings />} />
+              <Route path="cabins" element={<Cabins />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="create_employee" element={<CreateEmployee />} />
+              <Route path="delete_employee" element={<DeleteEmployee />} />
+              <Route path="history" element={<History />} />
+              <Route path="*" element={<PageNotFound />} />{" "}
+            </Route>
+            {/* employee */}
+            <Route path="employee" element={<Employee />}>
+              <Route index element={<Navigate replace to="dashboard" />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="account" element={<Account />} />
+              <Route path="bookings" element={<Bookings />} />
+              <Route path="cabins" element={<Cabins />} />
+              <Route path="*" element={<PageNotFound />} />{" "}
+            </Route>
+            {/* guest */}
+            <Route path="guest" element={<Guest />}>
+              <Route index element={<Navigate replace to="dashboard" />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="account" element={<Account />} />
+              <Route path="*" element={<PageNotFound />} />{" "}
+            </Route>
+
+            <Route path="*" element={<PageNotFound />} />
+          </Route>
+
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </BrowserRouter>
+
+## Dashboard Layout
+
+<code>Dashboard.jsx</code>

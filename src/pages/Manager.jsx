@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
 
-function Admin() {
+function Manager() {
   return (
     <div>
-      <p>Admin</p>
+      <p>Manager</p>
       <Outlet />
     </div>
   );
 }
 
-export default Admin;
+export default Manager;
