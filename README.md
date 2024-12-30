@@ -65,80 +65,154 @@ Below are the key phases of the development process:
    - Manage system-level configurations.
    - Resolve disputes and generate reports for business analysis.
 
-### Project Requirements/Features
+---
 
-### 1. **Guest Tourists (Non-Registered Users)**
+### <i><u>Inspiration Behind the Project</u></i>
 
-- Can view the landing page and search for tourist destinations.
-- View a list of available hotels for each destination along with a map displaying their locations.
-- Must sign up to create a booking.
+During a visit to Cox's Bazar, the challenges of tour planning inspired the idea for this platform. Motivated by platforms like **Booking.com**, this project aims to make touring easier and more organized for everyone.
 
-### 2. **Tourists (Registered Users)**
+---
 
-- Access a personal dashboard showing:
-  - Current and past bookings.
-  - Favorite destinations or hotels.
-  - Personal profile management (upload/change avatar and edit personal details).
-- Make a booking, specifying:
-  - Number of guests, number of nights, additional services like breakfast.
-  - Choose between different booking statuses: "Unconfirmed", "Check-in", or "Check-out".
-- Manage bookings (edit, delete, check-in, check-out).
-- Pay for the booking during check-in if the payment hasn’t been completed earlier.
-- Add breakfast options during check-in if not selected during booking.
+### <i><u>Objective</u></i>
 
-### 3. **Hotel Management (Admin and Employees)**
+Create an all-in-one tour management platform that simplifies travel for tourists and streamlines operations for hotel management and admins.
 
-#### **Super Admin**
+---
 
-- **Manage Multiple Hotels**:
-  - Add/remove hotels under the company's management.
-  - Assign hotel managers for each hotel.
-- **Dashboard**:
-  - View key statistics for all hotels (bookings, occupancy rates, revenue, etc.).
-  - Generate reports for individual hotels or combined statistics.
-  - Compare the performance of multiple hotels.
+### <i><u>Background</u></i>
 
-#### **Hotel Manager**
+This project was developed while learning React development. It serves as an extended version of the **The Wild Oasis** project, integrating advanced features like:
 
-- **Hotel-Specific Management**:
-  - Manage rooms, bookings, staff, and hotel settings for their assigned hotel.
-  - Access to hotel-specific statistics, guest check-in/check-out records, and sales data.
-  - Update room pricing, availability, and discounts.
-- Can manage bookings, confirming check-ins, processing check-outs, and accepting payment.
-- Can add hotel employees.
+- Role-based access.
+- Enhanced booking and review systems.
+- Scalable design for real-world applications.
 
-#### **Hotel Employees**
+---
 
-- **Booking and Guest Management**:
-  - Manage bookings: check-ins, check-outs, and guest services.
-  - View guest details: full name, email, national ID, nationality, and country flag for easy identification.
-  - Accept payment upon guest arrival and confirm breakfast options if necessary.
+## <u>Requirements Analysis</u>
 
-### 4. **Booking Management**
+### <i><u>Functional Requirements</u></i>
 
-- Bookings include:
-  - Number of guests, number of nights, and guest observations.
-  - Option to add breakfast (price is determined by the admin).
-- Bookings can be filtered by status: "Unconfirmed", "Check-in", "Check-out".
-- Payment processing during check-in if not prepaid.
-- Guests can add services (e.g., breakfast) upon check-in.
+1. **User Roles and Permissions**
 
-### 5. **Dashboard Features**
+   - **Tourists**:
+     - Search for destinations, view tourist spots, and book hotels.
+     - Leave reviews and manage personal bookings.
+   - **Hotel Management**:
+     - Manage hotel listings, handle bookings, and communicate with tourists.
+   - **Admin**:
+     - Oversee all activities, resolve disputes, and generate reports.
 
-- The initial screen shows a **dashboard** with:
-  - List of guests checking in and checking out.
-  - Statistics of bookings, sales, check-ins, and occupancy rates (filterable by the last 7, 30, or 90 days).
-  - Charts showing:
-    - Daily hotel sales.
-    - Stay duration statistics.
+2. **Booking Management**
 
-### 6. **Other Features**
+   - Tourists can book hotels, modify bookings, and cancel reservations.
+   - Hotel management can confirm, update, and cancel bookings.
 
-- **Table View for Cabins/Rooms**:
-  - Displays cabin photo, name, capacity, price, discount, and other relevant information.
-- **Hotel Settings**:
-  - Hotel manager can set breakfast prices, minimum/maximum nights per booking, maximum guests per booking, and other settings.
-- **Dark Mode**: The application includes a dark mode for improved usability.
+3. **Dashboard Features**
+
+   - Admins and hotel management can access dashboards for analytics:
+     - View reports on bookings, user activity, and revenue.
+     - Filter and analyze data by custom timeframes (7, 30, or 90 days).
+
+4. **User Authentication and Profiles**
+
+   - Secure login/signup for all users. (Signup only for tourist, Hotel management is registered by admin)
+   - Users can upload avatars and update personal information.
+
+5. **Review System**
+   - Tourists can leave reviews for hotels and tourist spots.
+   - Reviews are visible to other users.
+
+---
+
+### <i><u>Non-Functional Requirements</u></i>
+
+1. **Scalability**
+
+   - The platform must support an increasing number of users and data.
+
+2. **Performance**
+
+   - Ensure quick load times for hotel searches and dashboard analytics.
+
+3. **Security**
+
+   - Implement authentication using JSON Web Tokens (JWT).
+   - Encrypt sensitive user data and enforce role-based access control.
+
+4. **Usability**
+
+   - Responsive design using ReactJS and Bootstrap for a seamless user experience across devices.
+
+5. **Reliability**
+   - Ensure consistent uptime with proper error handling and fail-safe mechanisms.
+
+---
+
+### <i><u>Technical Requirements</u></i>
+
+1. **Frontend**:
+
+   - **Next.js**: Used for the home page.
+   - **ReactJS**: Used for server-side rendering and SPA.
+   - **Bootstrap**: For responsive and clean design.
+
+2. **Backend and Database**:
+
+   - **Supabase**: Used as the backend and database solution (PostgreSQL).
+
+###### **Technology Stack**
+
+| Category                | Technology                                                                                                                                                                                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Routing                 | <img src="https://reactrouter.com/favicon-light.png" alt="React Router" width="24"/> [React Router](https://reactrouter.com)                                                                                                  |
+| Styling                 | <img src="https://styled-components.com/favicon.png" alt="Styled Components" width="24"/> [Styled Components](https://styled-components.com)                                                                                  |
+| Remote State Management | <img src="https://i.ibb.co/zSvTDLc/logos-react-query-icon.png" alt="React Query" width="24"/> [React Query](https://react-query.tanstack.com)                                                                                 |
+| UI State Management     | <img src="https://reactjs.org/favicon.ico" alt="Context API" width="24"/> [Context API](https://reactjs.org)                                                                                                                  |
+| Form Management         | <img src="https://i.ibb.co/k2rDfVW/simple-icons-reacthookform.png" alt="React Hook Form" width="24"/> [React Hook Form](https://react-hook-form.com)                                                                          |
+| Authentication          | <img src="https://jwt.io/img/favicon/favicon-32x32.png" alt="JWT" width="24"/> [JWT](https://jwt.io) / <img src="https://firebase.google.com/favicon.ico" alt="Firebase" width="24"/> [Firebase](https://firebase.google.com) |
+| Other Tools             | React Icons / React Hot Toast / Recharts / date-fns / Supabase                                                                                                                                                                |
+
+---
+
+## <u>System Design</u>
+
+### <i><u>Data Flow Diagram</u></i>
+
+DFD level 0, 1, 2 for your project using lucidchart.
+
+---
+
+### <i><u>Use Case Diagram</u></i>
+
+(both in hand using pen-paper and in lucid chart software
+
+---
+
+### <i><u>Wireframing</u></i>
+
+---
+
+### <i><u>Database Design</u></i>
+
+---
+
+## <u>Implementation</u>
+
+- Developed the application in incremental sprints:
+  - Authentication, user roles, and dashboard integration.
+  - Features like booking management, payment integration, and analytics.
+- Focused on clean and maintainable code with modern practices like React Redux.
+
+---
+
+## <u>Testing</u>
+
+- Conducted unit testing for individual components.
+- Performed integration testing for seamless communication between frontend, backend, and database.
+- Tested for edge cases:
+  - Invalid booking inputs.
+  - Role-based access violations.
 
 ---
 
