@@ -25,6 +25,8 @@ The **Tour and Hotel Management App** is designed to streamline the management o
   - Admin: Oversees both tourists and hotel management, manages system-level activities,
     resolves disputes, and generates reports for business analysis.
 
+### Use Case Diagram
+- [Lucid Chart Link](https://lucid.app/lucidchart/546bd9fb-b4ee-4c9f-9987-292fdd894c2c/edit?viewport_loc=-1639%2C-742%2C2172%2C1191%2C0_0&invitationId=inv_2e15c621-680e-469a-945a-1efa51227a38)
 ### Project Requirements/Features
 
 ### 1. **Guest Tourists (Non-Registered Users)**
