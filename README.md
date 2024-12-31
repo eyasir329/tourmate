@@ -191,6 +191,17 @@ DFD level 0, 1, 2 for your project using lucidchart.
 
 ### <i><u>Wireframing</u></i>
 
+to view online: https://balsamiq.cloud/s138lnh/py6ok9
+
+- Front page (visible for all users).
+
+  ![front_page](https://i.ibb.co.com/NWRK8w3/public-front-page.png)
+
+- Registration / Sign in page
+- Admin portal
+- Hotel Management portal
+- Tourist portal
+
 ---
 
 ### <i><u>Database Design</u></i>
