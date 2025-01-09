@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 function Admin() {
   return (
     <div>
-      <p>Admin</p>
+      <p>Admin testing</p>
       <Outlet />
     </div>
   );
