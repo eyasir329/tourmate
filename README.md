@@ -181,13 +181,19 @@ This project was developed while learning React development. It serves as an ext
 
 DFD level 0, 1, 2 for your project using lucidchart.
 
+![dfd0]()
+![dfd1]()
+![dfd2]()
+
 ---
 
 ### <i><u>Use Case Diagram</u></i>
 
 (both in hand using pen-paper and in lucid chart software
 
----
+### <i><u>Sequence Diagram</u></i>
+
+## ![sequence](https://i.ibb.co.com/j9NnG2Vs/Eyasir-Ahamed-15.png)
 
 ### <i><u>Wireframing</u></i>
 
