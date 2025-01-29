@@ -1,5 +1,7 @@
 # Tourmate - A Complete Tour Management Platform
 
+- Presentation [Video](https://drive.google.com/file/d/1dX8abe7UKN240VrgiJIv1yhSv9YmH7la/view?usp=sharing), [Slide](https://1drv.ms/p/c/9c26f137e074ec86/Ed8CWFyYYstDvInGaW-u0o4BtElww7TWcspifa5n_CaLxg?e=rPj3OR)
+
 ###### Manage Hotels, Flights, Cars, and Attractions in One Place
 
 ## <u>Overview</u>
