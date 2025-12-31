@@ -65,6 +65,7 @@ function MenuItem({ pizza }) {
 }
 
 const htmlTemplate = readFileSync(`${__dirname}/index.html`, "utf-8");
+const ClientJs = readFileSync(`${__dirname}/client.js`, "utf-8");
 
 const server = createServer((req, res) => {
   const pathname = parse(req.url, true).pathname;
@@ -79,6 +80,9 @@ const server = createServer((req, res) => {
 
   } else if (pathname === "/test") {
     res.end("Testing!");
+  }else if (pathname === "/client.js") {
+    res.writeHead(200, { "Content-Type": "application/javascript" });
+    res.end(ClientJs);
   } else {
     res.end("Something else!");
   }

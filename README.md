@@ -261,3 +261,179 @@ Manual SSR consists of **four fundamental steps**:
 Without hydration, SSR provides **visibility but not interactivity**.
 
 ---
+
+## Hydration in Server-Side Rendering (SSR)
+
+**Hydration** is the process by which a client-side JavaScript framework (such as React) **attaches interactivity and state to server-rendered HTML**.
+SSR delivers fast initial visibility, but without hydration the page remains **static** and non-interactive.
+
+---
+
+## Mental Model
+
+Think of hydration as **watering dry HTML**:
+
+* **SSR** → creates the HTML structure (shape)
+* **Hydration** → adds behavior (events, state, effects)
+
+The DOM already exists; React’s job is to **reuse it**, not recreate it.
+
+---
+
+## How Hydration Works (Step-by-Step)
+
+1. **HTML First**
+
+   * Browser receives fully rendered HTML from the server.
+   * Content is immediately visible.
+
+2. **JavaScript Bundle Loads**
+
+   * The React runtime and application code download in the background.
+
+3. **Client Render (Reconciliation)**
+
+   * React builds the virtual component tree on the client.
+   * It compares this tree with the existing server-rendered DOM.
+
+4. **DOM Adoption**
+
+   * If markup matches, React reuses the existing DOM nodes.
+   * No DOM replacement occurs.
+
+5. **Event Binding**
+
+   * Event listeners are attached.
+   * Hooks (`useState`, `useEffect`) activate.
+   * Page becomes fully interactive.
+
+> Result: The page now behaves exactly like a client-rendered React app.
+
+---
+
+## Hydration Requirements
+
+Hydration **requires deterministic rendering**:
+
+* Same components
+* Same structure
+* Same data
+* Same order
+
+Any mismatch breaks the process.
+
+---
+
+## Hydration Errors
+
+A **hydration error** occurs when the server-rendered HTML does not match what React expects on the client.
+
+### Common Causes
+
+### 1. Invalid HTML Structure
+
+```html
+<p>
+  <div>Invalid</div>
+</p>
+```
+
+### 2. Non-Deterministic Data
+
+* `Date.now()`
+* `Math.random()`
+* API responses that differ between server and client
+
+### 3. Browser-Only APIs During Render
+
+```js
+window
+document
+localStorage
+```
+
+> These do not exist on the server.
+
+### 4. Side Effects During Render
+
+* DOM mutations during render
+* Effects that should run in `useEffect`
+
+---
+
+## Key Takeaways
+
+* SSR gives **speed and SEO**
+* Hydration gives **interactivity**
+* HTML must be **identical** on server and client
+* Mismatches lead to hydration errors or full re-renders
+
+---
+
+## One-Line Summary (Exam-Friendly)
+
+> **Hydration is the process by which React attaches event handlers and state to server-rendered HTML, transforming a static page into a fully interactive application.**
+
+---
+
+## Manual Hydration in React SSR
+
+Hydration restores **interactivity** to server-rendered HTML by connecting a client-side JavaScript bundle to the static DOM.
+
+---
+
+## 1. Client-Side Script Setup
+
+* Create a `client.js` file containing the **same React components** used on the server.
+* Serve this script via a route on the server with the header:
+
+  ```http
+  Content-Type: application/javascript
+  ```
+* Include any necessary data objects (e.g., arrays or props) in the script.
+* Enable JSX in the browser using **Babel** (`text/babel`) if not precompiled.
+
+---
+
+## 2. Loading React in the Browser
+
+* Include React and ReactDOM via **CDN scripts** in your HTML:
+
+  ```html
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  ```
+* These create global `React` and `ReactDOM` objects accessible to your `client.js`.
+
+---
+
+## 3. Hydrating with `hydrateRoot`
+
+* Select the server-rendered root element:
+
+  ```js
+  import { hydrateRoot } from 'react-dom/client';
+  hydrateRoot(document.getElementById('root'), <App />);
+  ```
+* **Tree Must Match**: The client-side React tree must match the server-rendered HTML exactly to prevent hydration errors.
+* React **reuses existing DOM nodes** and attaches event handlers and state.
+
+---
+
+## 4. Observing Hydration in Action
+
+1. **Initial HTML Render**: Browser shows the static server-rendered content immediately.
+2. **Hydration Phase**: Client downloads JS bundle, `hydrateRoot` runs, and components become fully interactive.
+
+> Tip: On slow networks, you can clearly see SSR first, then hydration adding interactivity.
+
+---
+
+## Key Takeaways
+
+* Hydration **does not recreate the DOM**, it attaches React logic to it.
+* SSR + Hydration = fast **initial render** + full **client-side interactivity**.
+* Modern frameworks (Next.js) automate these steps and optimize with **streaming, code splitting, and selective hydration**.
+
+---
+
