@@ -984,3 +984,139 @@ Your explanation is **technically sound** and reflects **Next.js best practices*
 The key principle to remember is:
 
 > **Server Components render UI. Client Components enable interaction.**
+
+---
+
+## Loading UI in the Next.js App Router (`loading.js`)
+
+In the Next.js App Router, loading states are handled through a **file-based convention** using `loading.js`. This approach integrates deeply with **React Suspense** and **Streaming Server-Side Rendering (SSR)** to improve perceived performance.
+
+---
+
+## The `loading.js` Convention
+
+To define a loading state for a route, create a file named:
+
+```
+loading.js
+```
+
+inside the route directory.
+
+### Key Characteristics
+
+### ✅ Automatic Suspense Boundary
+
+* When `loading.js` exists, Next.js **automatically wraps the associated `page.js` and its nested routes in a React Suspense boundary**
+* No manual `<Suspense>` setup is required
+
+---
+
+### ✅ Immediate UI Feedback
+
+* The loading component is **rendered on the server**
+* It is **streamed to the browser immediately**, before data fetching in the page completes
+
+---
+
+### ✅ Hierarchical Behavior
+
+* A `loading.js` placed in a **parent folder** (e.g., `app/`) applies to:
+
+  * That route
+  * All nested sub-routes
+* A deeper route can override it by defining its own `loading.js`
+
+---
+
+## Creating a Loading Component
+
+The `loading.js` file must export a **default React component**.
+It can be simple text or a full skeleton UI.
+
+### Example
+
+```js
+// app/loading.js
+export default function Loading() {
+  return (
+    <div className="spinner-container">
+      <div className="spinner" />
+      <p>Loading data...</p>
+    </div>
+  );
+}
+```
+
+> ℹ️ `loading.js` is a **Server Component by default**
+> If you need animations using browser APIs, you must add `"use client"`
+
+---
+
+## How `loading.js` Works Internally
+
+1. Navigation starts
+2. Layout is rendered immediately
+3. `loading.js` UI is streamed
+4. Page data is fetched on the server
+5. Final page content replaces the loading UI automatically
+
+This enables **partial rendering** instead of blocking the entire page.
+
+---
+
+## Benefits of Using `loading.js`
+
+### 🚀 No Manual Loading State Management
+
+* No `useState`
+* No `if (isLoading)`
+* No `useEffect` fetch logic
+
+---
+
+### 🚀 Streaming SSR
+
+* Server sends HTML **in chunks**
+* Layout + loading UI arrive first
+* Page content streams in later
+
+---
+
+### 🚀 Better User Experience
+
+* Faster perceived load time
+* Reduced layout shift
+* No blank screens during navigation
+
+---
+
+## Mental Model
+
+| Feature           | `loading.js` |
+| ----------------- | ------------ |
+| Based on Suspense | ✅            |
+| Automatic         | ✅            |
+| Server-rendered   | ✅            |
+| Streams HTML      | ✅            |
+| Route-scoped      | ✅            |
+| JS required       | ❌            |
+
+---
+
+## Important Notes
+
+* `loading.js` **only triggers during navigation or data fetching**
+* It does **not replace** client-side loading states inside Client Components
+* It works best with **Server Components + async data fetching**
+
+---
+
+### Final Verdict
+
+This explanation is **technically correct**, **idiomatic Next.js**, and suitable for:
+
+* Study notes
+* Interviews
+* README documentation
+* App Router fundamentals
