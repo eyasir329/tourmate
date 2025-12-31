@@ -809,3 +809,178 @@ The biggest mental shift is this:
 
 > **Server Components replace `useEffect`-based data fetching entirely.**
 
+---
+
+## Client Components in the Next.js App Router
+
+While **Server Components** are the default in the App Router, they **cannot provide interactivity** because they execute only on the server and do not ship JavaScript to the browser.
+To enable interactivity, you must use **Client Components**.
+
+---
+
+## Why Server Components Cannot Be Interactive
+
+Server Components run exclusively on the server, which implies:
+
+### ❌ No React Hooks
+
+Hooks such as:
+
+* `useState`
+* `useEffect`
+* `useReducer`
+* `useContext`
+
+are **not available**, because they rely on a persistent client-side runtime.
+
+---
+
+### ❌ No Event Handlers
+
+Event handlers like:
+
+* `onClick`
+* `onChange`
+* `onSubmit`
+
+**compile**, but they do nothing—because **no JavaScript is sent to the browser** for Server Components.
+
+---
+
+### ❌ No Browser APIs
+
+Server Components cannot access:
+
+* `window`
+* `document`
+* `localStorage`
+* `navigator`
+
+These APIs exist only in the browser environment.
+
+---
+
+## The `"use client"` Directive
+
+To opt into client-side behavior, you must add the directive:
+
+```js
+"use client";
+```
+
+### Key Properties
+
+* **Must be the first line** in the file (before imports)
+* Creates a **client-side boundary**
+* All imported components become **Client Components transitively**
+
+---
+
+### Hydration Explained
+
+Client Components are:
+
+1. **Pre-rendered to HTML on the server**
+2. **Hydrated in the browser** once the JS bundle loads
+3. Become fully interactive after hydration
+
+This gives you **fast initial paint + interactivity**.
+
+---
+
+## When to Use Client Components
+
+Use Client Components **only when necessary**:
+
+### ✅ Interactive UI
+
+* Buttons
+* Forms
+* Modals
+* Carousels
+* Search inputs
+
+### ✅ State Management
+
+* `useState`
+* `useReducer`
+
+### ✅ Side Effects
+
+* Timers
+* DOM manipulation
+* Subscriptions (`useEffect`)
+
+### ✅ Browser APIs
+
+* `window`
+* `document`
+* `localStorage`
+
+---
+
+## Best Practice: Move Interactivity to the Leaves
+
+A core Next.js pattern is:
+
+> **Keep Server Components high in the tree and push Client Components to the leaves**
+
+### Benefits
+
+* Minimal JavaScript sent to the browser
+* Better performance and LCP
+* Direct server access for data fetching
+* Smaller hydration surface
+
+### Composition Model
+
+* ✅ Server Components **can render** Client Components
+* ❌ Client Components **cannot import** Server Components
+
+This enables **islands of interactivity** inside mostly static pages.
+
+---
+
+## Example: Client Component Counter
+
+```js
+"use client";
+
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick={() => setCount((c) => c + 1)}>
+      Count is {count}
+    </button>
+  );
+}
+```
+
+✔ Hooks work
+✔ Events work
+✔ JavaScript is shipped to the browser
+
+---
+
+## Mental Model (Important)
+
+| Feature           | Server Component | Client Component   |
+| ----------------- | ---------------- | ------------------ |
+| Runs on server    | ✅                | ✅ (initial render) |
+| Runs in browser   | ❌                | ✅                  |
+| Hooks             | ❌                | ✅                  |
+| Event handlers    | ❌                | ✅                  |
+| Browser APIs      | ❌                | ✅                  |
+| JS sent to client | ❌                | ✅                  |
+
+---
+
+### Final Verdict
+
+Your explanation is **technically sound** and reflects **Next.js best practices**.
+The key principle to remember is:
+
+> **Server Components render UI. Client Components enable interaction.**
