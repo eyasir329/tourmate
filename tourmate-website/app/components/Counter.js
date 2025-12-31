@@ -1,0 +1,16 @@
+"use client";
+
+import { useState } from "react";
+
+export default function Counter({ users }) {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>There are {users.length} users.</p>
+      <h2>Counter: {count}</h2>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <button onClick={() => setCount(count - 1)}>Decrement</button>
+    </div>
+  );
+}
