@@ -343,3 +343,127 @@ export default function Navigation() {
 
 ---
 
+## Layouts in Next.js (App Router)
+
+**Layouts** define shared UI that persists across multiple pages, such as **navigation bars, footers, and sidebars**.
+Unlike pages, layouts **do not re-render when navigating between sibling routes**, which improves performance and preserves state.
+
+---
+
+## The Root Layout (`app/layout.js`)
+
+Every App Router project **must** have a root layout.
+
+### Key Properties
+
+### 1. Required File
+
+* `app/layout.js` is mandatory
+* If deleted, Next.js automatically regenerates a default layout
+
+---
+
+### 2. HTML & Body Tags
+
+* The root layout must define:
+
+  ```html
+  <html>
+  <body>
+  ```
+* This is where global document structure lives
+
+---
+
+### 3. `children` Prop
+
+* Every layout receives a `children` prop
+* It represents:
+
+  * The active page
+  * Or a nested layout
+
+---
+
+## Using Layouts for Shared UI
+
+Layouts are ideal for UI that should **persist across routes**.
+
+### Example: Global Navigation
+
+```js
+import Navigation from "@/components/Navigation";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <Navigation />      {/* Persistent UI */}
+        <main>{children}</main> {/* Route-specific content */}
+      </body>
+    </html>
+  );
+}
+```
+
+### Benefits
+
+* Navigation does not re-mount on route changes
+* Client-side state is preserved
+* Fewer re-renders → better performance
+
+---
+
+## Global Styles
+
+The root layout is the **correct place** to import global CSS:
+
+```js
+import "./globals.css";
+```
+
+* Styles apply to the entire app
+* Imported only once
+
+---
+
+## Nested Layouts
+
+Layouts can be **nested** by adding `layout.js` to subfolders.
+
+Example:
+
+```text
+app/
+ ├─ layout.js        (root layout)
+ └─ cabins/
+     ├─ layout.js    (cabins layout)
+     └─ page.js
+```
+
+### How Nesting Works
+
+* `/cabins` uses:
+
+  * Root layout
+  * Cabins layout
+  * Cabins page
+* Layouts wrap each other hierarchically
+
+---
+
+## Key Differences: Layout vs Page
+
+| Feature                  | Layout | Page  |
+| ------------------------ | ------ | ----- |
+| Re-renders on navigation | ❌ No   | ✅ Yes |
+| Can define shared UI     | ✅ Yes  | ❌ No  |
+| Must render `children`   | ✅ Yes  | ❌ No  |
+
+---
+
+## One-Line Summary (Exam-Friendly)
+
+> **Layouts in Next.js define persistent UI that wraps pages, improving performance by avoiding unnecessary re-renders during navigation.**
+
+---
