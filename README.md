@@ -1,411 +1,241 @@
-# Tourmate — React SSR & Hydration Notes
+## Setting Up a Next.js Project (Next.js 14)
 
-This repository is a small learning project + notes on **Server-Side Rendering (SSR)**, **Hydration**, and how frameworks like **Next.js** make these workflows production-ready.
+Creating a Next.js project is very similar to initializing a React app with Vite or Create React App, but with **SSR and full-stack features enabled by default**.
 
-## Quick Start
+---
 
-### Install
+## Step 1: Project Initialization
+
+To avoid version mismatches and ensure alignment with modern documentation, explicitly use **Next.js 14**.
+
+### Command
 
 ```bash
-npm install
+npx create-next-app@14 tourmate-website
+# npx create-next-app@latest tourmate-website
 ```
 
-### Run (auto-restart)
+### Project Context
+
+This project represents the **customer-facing website** for **The Wild Oasis**, where users can:
+
+* View cabins
+* Make and manage reservations
+* Update profile information
+
+---
+
+## Step 2: Configuration Options
+
+During setup, select the following options:
+
+| Option       | Choice | Reason                             |
+| ------------ | ------ | ---------------------------------- |
+| TypeScript   | ❌ No   | Keeps setup beginner-friendly      |
+| ESLint       | ✅ Yes  | Enforces code quality              |
+| Tailwind CSS | ✅ Yes  | Deeply integrated and efficient    |
+| App Router   | ✅ Yes  | Modern, recommended routing system |
+| Import Alias | ❌ No   | Defaults are sufficient            |
+
+---
+
+## Step 3: Project Structure Overview
+
+After installation, open the project:
+
+```bash
+code .
+```
+
+### Key Files & Folders
+
+#### `package.json`
+
+* Confirms Next.js is a **Node.js application**
+* Defines scripts and dependencies
+
+#### `app/`
+
+* **Core directory** for the App Router
+* Contains routes, layouts, and server components
+
+#### `public/`
+
+* Stores static assets (images, icons, fonts)
+
+#### `next.config.js`
+
+* Used for custom framework configuration
+
+---
+
+## Step 4: Running the Development Server
+
+### Command
 
 ```bash
 npm run dev
 ```
 
-### Run (single start)
+### Notes
 
-```bash
-npm start
-```
+* Development server runs at:
 
-> Notes:
->
-> - The dev script uses Node’s built-in file watcher (`node --watch start.js`).
-> - SSR output is served as HTML; hydration adds client-side interactivity.
-
----
-
-## Table of Contents
-
-- [SSR with Next.js (high level)](#ssr-with-nextjs-high-level)
-- [SSR vs CSR](#ssr-vs-csr)
-- [Static vs Dynamic Rendering (SSR)](#static-vs-dynamic-rendering-ssr)
-- [Hydration (why SSR alone is not enough)](#hydration-why-ssr-alone-is-not-enough)
-- [Manual SSR with Node.js + React](#manual-ssr-with-nodejs--react)
-- [Hydration deep dive](#hydration-deep-dive)
-- [Next.js overview](#nextjs-overview)
-
----
-
-## SSR with Next.js (high level)
-
-![N1](https://i.ibb.co.com/TBCz7147/N1.png)
-![N2](https://i.ibb.co.com/6JYks15D/N2.png)
-
----
-
-## SSR vs CSR
-
-**Server-Side Rendering (SSR)** generates HTML on the **server** and sends a fully rendered page to the browser.
-**Client-Side Rendering (CSR)** sends a minimal HTML shell and relies on JavaScript to render content in the browser.
-
-Modern web development initially shifted heavily toward CSR (React, Vue), but SSR has regained importance for **SEO, performance, and content-heavy applications**.
-
-### Comparing Rendering Methods
-
-| Feature                | Client-Side Rendering (CSR)               | Server-Side Rendering (SSR)              |
-| ---------------------- | ----------------------------------------- | ---------------------------------------- |
-| **Rendering Location** | Browser (client)                          | Server                                   |
-| **Initial Load Speed** | Slower (JS must download & execute first) | Faster (HTML arrives pre-rendered)       |
-| **Data Fetching**      | After mount → possible request waterfalls | Before render on the server              |
-| **Interactivity**      | High (SPA-like experience)                | Initially static, enhanced via hydration |
-| **SEO**                | Challenging (JS-dependent indexing)       | Excellent (content visible immediately)  |
-
-![N3](https://i.ibb.co.com/RTrQ66KD/N3.png)
-![N4](https://i.ibb.co.com/kVHYGqf9/N4.png)
-
----
-
-## Static vs Dynamic Rendering (SSR)
-
-### 1) Static Rendering (SSG)
-
-- HTML generated **at build time**
-- Same content served for every request
-- Extremely fast and cache-friendly
-
-**Best for:** blogs, documentation, landing pages
-
-### 2) Dynamic Rendering
-
-- HTML generated **per request**
-- Can include user-specific or frequently changing data
-
-**Best for:** dashboards, personalized pages, real-time data
-
-![N5](https://i.ibb.co.com/twgJWRgV/N5.png)
-
----
-
-## Hydration (why SSR alone is not enough)
-
-After the server sends static HTML:
-
-1. The browser displays content immediately
-2. JavaScript loads in the background
-3. **Hydration** attaches event listeners and state
-4. Page becomes fully interactive
-
-This bridges SSR performance with SPA-like UX.
-
-### When to Use Each
-
-**Use SSR when:**
-
-- SEO is critical
-- Fast first contentful paint matters
-- Content is public and crawlable
-  **Examples:** e-commerce, blogs, news, marketing sites
-
-**Use CSR when:**
-
-- App is highly interactive
-- SEO is irrelevant
-- App is behind authentication
-  **Examples:** admin panels, internal tools, dashboards
-
----
-
-## Manual SSR with Node.js + React
-
-Manually implementing SSR reveals the core mechanics behind frameworks like **Next.js**.
-At its heart, SSR is simply **rendering React components to HTML on the server and sending that HTML to the browser**.
-
-### 1) Setting Up the Node.js Server
-
-A basic Node.js HTTP server is sufficient to handle SSR.
-
-**Creating the server** (conceptually):
-
-```js
-http.createServer((req, res) => {
-  // ...
-});
-```
-
-**Routing** usually looks like:
-
-- `/` → render main React app
-- `/test` → send a simple response or alternate render
-
-**Auto-restart (development):**
-
-```bash
-node --watch start.js
-```
-
-### 2) Preparing the React Environment (Node Compatibility)
-
-Node.js does **not** understand JSX or modern ES syntax by default.
-
-**Runtime dependencies:**
-
-```bash
-npm install react react-dom
-```
-
-**Development dependencies (Babel):**
-
-```bash
-npm install -D @babel/core @babel/preset-env @babel/preset-react @babel/register
-```
-
-**Babel registration** (typical pattern):
-
-```js
-require('@babel/register')({
-  presets: ['@babel/preset-env', '@babel/preset-react'],
-});
-
-require('./server');
-```
-
-### 3) Rendering React to HTML
-
-This is the **core SSR step**.
-
-```js
-import { renderToString } from 'react-dom/server';
-
-const html = renderToString(<App />);
-```
-
-Use an `index.html` template such as:
-
-```html
-<div id="root">__CONTENT__</div>
-```
-
-Then on each request:
-
-1. Read `index.html`
-2. Replace `__CONTENT__` with rendered HTML
-3. Send the result as the response
-
-Make sure to set the correct header:
-
-```js
-res.setHeader('Content-Type', 'text/html');
-```
-
-### 4) The Interactivity Gap
-
-At this stage, the app **looks complete but behaves like static HTML**.
-
-**What works:**
-
-- Markup is visible
-- Data is rendered
-- SEO crawlers see full content
-
-**What breaks:**
-
-- `useState`, `onClick`, `useEffect` do nothing
-- Buttons don’t respond
-- No client-side JavaScript is running
-
-**Why?**
-
-- The browser received **HTML only**
-- React’s runtime logic was never loaded on the client
-
-### 5) Hydration (The Missing Piece)
-
-Hydration solves the interactivity problem:
-
-- Client downloads the same React bundle
-- React matches existing HTML
-- Event listeners and state are attached
-- Page becomes fully interactive **without re-rendering DOM**
-
----
-
-## Hydration deep dive
-
-**Hydration** is the process by which a client-side JavaScript framework (such as React) **attaches interactivity and state to server-rendered HTML**.
-SSR delivers fast initial visibility, but without hydration the page remains **static** and non-interactive.
-
-### Mental Model
-
-Think of hydration as **watering dry HTML**:
-
-- **SSR** → creates the HTML structure (shape)
-- **Hydration** → adds behavior (events, state, effects)
-
-The DOM already exists; React’s job is to **reuse it**, not recreate it.
-
-### How Hydration Works (Step-by-Step)
-
-1. **HTML first**: browser receives fully rendered HTML.
-2. **JavaScript bundle loads** in the background.
-3. **Client render (reconciliation)**: React builds a tree client-side and compares it to the DOM.
-4. **DOM adoption**: if markup matches, React reuses DOM nodes.
-5. **Event binding**: listeners attach; hooks activate; page becomes interactive.
-
-### Hydration Requirements
-
-Hydration requires **deterministic rendering**:
-
-- Same components
-- Same structure
-- Same data
-- Same order
-
-Any mismatch can break hydration.
-
-### Hydration Errors (Common Causes)
-
-**1) Invalid HTML structure**
-
-```html
-<p>
-  <div>Invalid</div>
-</p>
-```
-
-**2) Non-deterministic data**
-
-- `Date.now()`
-- `Math.random()`
-- API responses that differ between server and client
-
-**3) Browser-only APIs during render**
-
-```js
-window;
-document;
-localStorage;
-```
-
-> These do not exist on the server.
-
-**4) Side effects during render**
-
-- DOM mutations during render
-- Effects that should run in `useEffect`
-
-### One-Line Summary (Exam-Friendly)
-
-> Hydration is the process by which React attaches event handlers and state to server-rendered HTML, transforming a static page into a fully interactive application.
-
-![hydration](https://i.ibb.co.com/h19KNtn4/H1.png)
-
-### Manual Hydration in React SSR
-
-Hydration restores interactivity by connecting a client-side JavaScript bundle to the static DOM.
-
-**1) Client-side script setup**
-
-- Create a `client.js` file containing the **same React components** used on the server.
-- Serve this script with:
-
-  ```http
-  Content-Type: application/javascript
   ```
-
-- Enable JSX in the browser using Babel (`text/babel`) if not precompiled.
-
-**2) Loading React in the browser**
-
-```html
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-```
-
-**3) Hydrating with `hydrateRoot`**
-
-```js
-import { hydrateRoot } from 'react-dom/client';
-
-hydrateRoot(document.getElementById('root'), <App />);
-```
-
-> The client-side tree must match the server HTML to avoid hydration mismatches.
+  http://localhost:3000
+  ```
+* `create-next-app` often initializes a **Git repository** automatically
 
 ---
 
-## Next.js overview
+## Verifying Server-Side Rendering
 
-**Next.js** is an opinionated React meta-framework (by Vercel) that provides SSR, routing, data fetching, and performance optimizations out of the box.
+To confirm SSR is working:
 
-![nextjs](https://i.ibb.co.com/KcgFqZp4/N6.png)
+1. Open the app in your browser
+2. View **Page Source** (not DevTools Elements)
+3. Check for content such as:
 
-### The Four Core Capabilities of Next.js
+   ```html
+   <h1>...</h1>
+   ```
 
-**1) Server-side rendering**
+   rendered directly in the HTML
 
-- Supports **Static Rendering (SSG)** and **Dynamic Rendering (per request)**
-- Rendering strategy can be configured **per route**
+If the content is present, the page is **server-side rendered**.
 
-**2) File system–based routing**
+---
 
-Routes are created by files and folders, e.g.:
+## Key Takeaway
 
-```
-app/blog/page.tsx → /blog
-```
+> **Next.js apps render HTML on the server by default, providing fast initial loads and SEO benefits without manual SSR setup.**
 
-**3) Server-side data operations**
+---
 
-- Built on **React Server Components**
-- Supports **Server Actions** for mutations
-- Data fetching happens directly on the server:
+## Routing in Next.js (App Router)
+
+Next.js uses **file system–based routing**, removing the need for manual route configuration tools like **React Router**. Routes are created automatically based on the structure of the `app/` directory.
+
+---
+
+## Core Routing Principles
+
+### 1. Folder-Based Routes
+
+* Each folder inside `app/` represents **one URL segment**.
+* Folder names map directly to the URL path.
+
+---
+
+### 2. `page.js` Is Required
+
+* A folder becomes a **public route only if it contains `page.js`**.
+* Without `page.js`, the folder is ignored by the router.
+
+---
+
+### 3. Default Exported Component
+
+* Every `page.js` must:
 
   ```js
-  await fetch(...)
+  export default function Page() { ... }
   ```
+* The exported component defines the UI for that route.
 
-**4) Built-in optimizations**
+---
 
-- Automatic code splitting
-- Route prefetching
-- Image optimization (`next/image`)
-- Font optimization (`next/font`)
-- SEO and metadata handling
+### 4. Server Components by Default
 
-![nextjs](https://i.ibb.co.com/ZRP85qXZ/N7.png)
+* `page.js` files are **React Server Components** unless explicitly marked with:
 
-### App Router vs Pages Router
+  ```js
+  "use client";
+  ```
+* This enables SSR, data fetching, and reduced client-side JavaScript.
 
-| Feature               | App Router                          | Pages Router                           |
-| --------------------- | ----------------------------------- | -------------------------------------- |
-| **Status**            | Recommended (since 2023)            | Legacy (maintained)                    |
-| **Rendering Model**   | Server Components by default        | Client Components only                 |
-| **Data Fetching**     | Native `fetch` in Server Components | `getStaticProps`, `getServerSideProps` |
-| **Layouts**           | Nested layouts, error boundaries    | Complex and limited                    |
-| **Advanced Features** | Streaming, Suspense, Server Actions | Not supported                          |
+---
 
-![nextjs](https://i.ibb.co.com/GfXsB28F/N8.png)
+## Defining Routes with Folder Structure
 
-### Trade-Offs of the App Router
+| URL        | Folder Structure      |
+| ---------- | --------------------- |
+| `/`        | `app/page.js`         |
+| `/cabins`  | `app/cabins/page.js`  |
+| `/about`   | `app/about/page.js`   |
+| `/account` | `app/account/page.js` |
 
-**Advantages:**
+> Folder name = URL segment
+> `page.js` = entry point for the route
 
-- Better performance
-- Less JavaScript sent to the client
-- True full-stack React
-- Streaming and partial rendering
+---
 
-**Challenges:**
+## Nested Routes
 
-- Steeper learning curve
-- Aggressive caching behavior
-- Requires careful mental model of server vs client code
+Nested URLs are created by **nesting folders**.
 
-### One-Line Summary (Exam-Friendly)
+Example:
 
-> Next.js is an opinionated React meta-framework that provides built-in routing, server-side rendering, data fetching, and performance optimizations for full-stack web applications.
+```text
+/cabins/test
+```
+
+Structure:
+
+```text
+app/
+ └─ cabins/
+     └─ test/
+         └─ page.js
+```
+
+Each folder adds **one path segment**.
+
+---
+
+## Developer Productivity Tips
+
+### VS Code Custom Labels
+
+* Since many files are named `page.js`, enable **Custom Labels** to display the parent folder:
+
+  ```
+  page (cabins)
+  page (about)
+  ```
+* This greatly improves navigation in large projects.
+
+---
+
+### Other Reserved File Names
+
+Next.js defines special files for common behaviors:
+
+| File           | Purpose                           |
+| -------------- | --------------------------------- |
+| `layout.js`    | Shared UI (headers, footers, nav) |
+| `loading.js`   | Route-level loading state         |
+| `error.js`     | Error boundary                    |
+| `not-found.js` | 404 handling                      |
+
+---
+
+## Version Awareness
+
+This project uses **Next.js 14**.
+
+To stay current:
+
+```bash
+npm install next@latest react@latest react-dom@latest eslint-config-next@latest
+```
+
+Professional Next.js development requires **regularly checking official docs and release notes** due to rapid framework evolution.
+
+---
+
+## One-Line Summary (Exam-Friendly)
+
+> **In Next.js App Router, routes are defined by folders inside `app/`, and a route becomes public only when a `page.js` file is present.**
+
+---
