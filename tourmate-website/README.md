@@ -1012,3 +1012,130 @@ app/
 
 This approach aligns perfectly with **Next.js server-first architecture** and keeps your app **SEO-friendly and maintainable**.
 
+---
+
+## Font Optimization in Next.js (App Router)
+
+Next.js includes a **built-in font optimization system** that ensures fonts load efficiently, prevent layout shifts, and improve overall performance.
+
+This is handled through the **`next/font`** module.
+
+---
+
+## 1. Performance Benefits of `next/font`
+
+### Zero Layout Shift (CLS Prevention)
+
+* Next.js automatically applies **size-adjust** CSS properties
+* Fallback fonts occupy the **same visual space** as the custom font
+* Prevents text from “jumping” when the font loads
+
+---
+
+### Automatic Self-Hosting
+
+* When using **Google Fonts**, Next.js:
+
+  * Downloads font files at build time
+  * Serves them from your own deployment
+* No runtime requests to Google’s CDN
+
+---
+
+### Privacy & Speed
+
+* No external font requests
+* Faster first paint
+* Improved privacy (no third-party tracking)
+
+---
+
+## 2. Using Google Fonts with `next/font`
+
+Fonts are imported from:
+
+```js
+import { Inter } from "next/font/google";
+```
+
+### Font Configuration Options
+
+```js
+const inter = Inter({
+  subsets: ["latin"],   // Required
+  display: "swap",      // Recommended
+  weight: ["400", "600"] // Required for non-variable fonts
+});
+```
+
+**Key options:**
+
+* **`subsets`**
+  Reduces bundle size by loading only required characters
+
+* **`weight`**
+  Required unless the font is variable
+
+* **`display: 'swap'`**
+  Ensures text is visible immediately using a fallback font
+
+---
+
+## 3. Applying Fonts in the App Router
+
+Each font configuration returns an object containing a **`className`**.
+
+### Global Font (Recommended)
+
+Apply the font at the root layout level:
+
+```js
+// app/layout.js
+import { Inter } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+});
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={inter.className}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+This applies the font across the entire application.
+
+---
+
+### Component-Level Fonts
+
+You can configure multiple fonts and apply them selectively:
+
+```js
+<h1 className={playfair.className}>Luxury Cabins</h1>
+```
+
+Useful for headings, branding, or accent typography.
+
+---
+
+## 4. Best Practices
+
+* Always use `next/font` instead of `<link>` tags
+* Define global fonts in `app/layout.js`
+* Limit subsets and weights to what you actually use
+* Prefer variable fonts when available
+
+---
+
+## Summary
+
+* `next/font` eliminates layout shift and improves performance
+* Fonts are self-hosted and privacy-friendly
+* Configuration is declarative and type-safe
+* Integrates seamlessly with Next.js Server Components
+

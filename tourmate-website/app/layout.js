@@ -1,6 +1,13 @@
 import Logo from "./_components/Logo";
 import Navigation from "./_components/Navigation";
 
+import { Josefin_Sans } from "next/font/google";
+
+const josefinSans = Josefin_Sans({
+  subsets: ["latin"],
+  display: "swap",
+});
+
 import "@/app/_styles/globals.css";
 
 export const metadata = {
@@ -9,13 +16,15 @@ export const metadata = {
     default: "Welcome - tourmate",
     template: "%s - tourmate",
   },
-  description: "Explore the world with tourmate",//by default for all pages
+  description: "Explore the world with tourmate", //by default for all pages
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-primary-950 text-primary-100 min-h-screen">
+      <body
+        className={`bg-primary-950 text-primary-100 min-h-screen ${josefinSans.className}`}
+      >
         <header>
           <Logo />
           <Navigation />
