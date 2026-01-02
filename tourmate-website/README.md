@@ -757,3 +757,122 @@ This organization:
 With a clean foundation in place, the project is now ready to scale into real-world features like authentication, reservations, and complex data fetching.
 
 ---
+
+## Styling with Tailwind CSS
+
+**Tailwind CSS** is a modern, utility-first CSS framework that integrates seamlessly with Next.js. Since Tailwind was selected during the initial `create-next-app` setup, the project comes fully configured out of the box.
+
+In **The Wild Oasis** customer website, Tailwind is used to build a clean, modern UI while keeping styling tightly coupled to components.
+
+---
+
+## Core Tailwind Integration in Next.js
+
+When Tailwind is enabled during project creation, Next.js automatically sets up the required tooling:
+
+### `tailwind.config.js`
+
+* Central configuration for Tailwind
+* Used to customize:
+
+  * Colors
+  * Fonts
+  * Spacing
+  * Breakpoints
+* Can be extended later for branding and design tokens
+
+---
+
+### `postcss.config.js`
+
+* Configures PostCSS to process Tailwind at build time
+* Enables features like:
+
+  * Utility generation
+  * Vendor prefixing
+  * Tree-shaking unused styles
+
+---
+
+### `globals.css`
+
+* Global stylesheet imported in the root layout
+* Includes Tailwind’s core directives:
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+This makes all Tailwind utility classes available throughout the application.
+
+---
+
+## Styling Philosophy for This Project
+
+Although Tailwind is the primary styling solution, **this section of the course prioritizes Next.js architecture and logic over manual CSS authoring**.
+
+### Pre-Written Styles
+
+* Most Tailwind class strings are provided
+* Reduces cognitive load
+* Keeps focus on:
+
+  * Server Components
+  * Data fetching
+  * Routing
+  * Authentication flows
+
+---
+
+### Tailwind vs Styled Components
+
+* The internal management app used **styled-components**
+* The customer-facing site uses **Tailwind CSS**, reflecting current industry trends
+* Tailwind is increasingly preferred for:
+
+  * Full-stack React apps
+  * Server Components
+  * Performance-sensitive UIs
+
+---
+
+## Why Tailwind Works Well with Next.js
+
+Tailwind and Next.js complement each other exceptionally well:
+
+### ⚡ Performance
+
+* Tailwind generates **only the CSS that is actually used**
+* Results in smaller CSS bundles and faster page loads
+
+---
+
+### 🧠 Developer Experience
+
+* Styles live directly alongside markup
+* No context switching between CSS files and components
+* Fits naturally with the component-driven mindset of React and Next.js
+
+---
+
+### 📱 Responsive Design
+
+* Mobile-first by default
+* Built-in responsive modifiers (`sm:`, `md:`, `lg:`)
+* Makes it easy to ensure the Wild Oasis website looks great on all screen sizes
+
+---
+
+## Summary
+
+Using Tailwind CSS in this project provides:
+
+* A modern, scalable styling approach
+* Excellent performance characteristics
+* A workflow that aligns perfectly with Next.js Server Components
+
+With styling infrastructure in place, the focus can now shift fully toward **building real features**, **fetching data**, and **creating interactive user experiences**.
+
+---
