@@ -1248,3 +1248,32 @@ The homepage lives at `app/page.js`. It’s the first entry point for most visit
 ### Performance Benefits
 
 Using `next/image` ensures the background is served in optimized formats and sizes, improving perceived speed and supporting strong **Largest Contentful Paint (LCP)**—especially on mobile and slower connections.
+
+---
+
+## About & Cabins Pages
+
+Building the **About** page and the **Cabins overview** page focuses on two things: server-first rendering for content, and responsive images that stay fast and visually stable.
+
+### Cabins Overview Page (`app/cabins/page.js`)
+
+The cabins page is a Server Component by default, which makes it a natural place to fetch cabin data on the server before the UI is rendered.
+
+- **Server-side data:** fetch data directly in the component (no client hooks needed).
+- **Page metadata:** exports a `metadata` object (e.g. `title: "Cabins"`) so the browser tab title stays consistent.
+
+### About Page (`app/about/page.js`) and Responsive Images
+
+The About page demonstrates two common `next/image` patterns—static imports and responsive “fill” layouts.
+
+- **Static imports:** importing an image file lets Next.js infer image dimensions automatically, which works well with `placeholder="blur"`.
+- **`fill` for responsive layout:** when an image should fill a container, use `fill`.
+- **Container requirements:** a `fill` image needs a parent with a non-static position (typically `relative`) and a defined size (e.g. via `aspect-square`, explicit height, etc.).
+- **Styling:** `object-cover` keeps the image from stretching while preserving its aspect ratio.
+
+### Metadata Templates in Practice
+
+The root layout defines a title template so every page title follows the same branding.
+
+- **Template:** configured in `app/layout.js` as `%s - tourmate`.
+- **Child pages:** when a page exports `metadata.title = "About"`, Next.js renders the final title as `About - tourmate`.
