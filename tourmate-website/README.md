@@ -1277,3 +1277,31 @@ The root layout defines a title template so every page title follows the same br
 
 - **Template:** configured in `app/layout.js` as `%s - tourmate`.
 - **Child pages:** when a page exports `metadata.title = "About"`, Next.js renders the final title as `About - tourmate`.
+
+---
+
+## Nested Routing (App Router)
+
+In the App Router, **nested routes** come from nesting folders inside `app/`. Each folder becomes a **URL segment**, and a route becomes reachable only when the segment contains a `page.js`.
+
+### Core Concepts
+
+- **Segments:** each part of a URL path (e.g. `/account`, `/cabins`) is a segment.
+- **File-system hierarchy:** to create `/account/profile`, create `app/account/profile/page.js`.
+- **`page.js` is the entry point:** a segment is not a public route unless it has a `page.js` exporting a default component.
+
+### Example: Account Area Structure (Illustrative)
+
+If you later expand the guest area under `/account`, you might structure it like this:
+
+| URL path | Folder path | Purpose |
+| --- | --- | --- |
+| `/account` | `app/account/page.js` | Main dashboard for the logged-in guest |
+| `/account/profile` | `app/account/profile/page.js` | Update guest profile information |
+| `/account/reservations` | `app/account/reservations/page.js` | View and manage reservations |
+
+### Why This Scales Well
+
+- **Automatic organization:** related pages stay grouped by folder.
+- **Scoped shared UI:** add a `layout.js` inside `app/account/` to share UI (e.g. a sidebar) across all `/account/*` routes.
+- **Predictable navigation:** the URL maps directly to the folder path, making pages easy to locate in the codebase.
