@@ -772,32 +772,32 @@ When Tailwind is enabled during project creation, Next.js automatically sets up 
 
 ### `tailwind.config.js`
 
-* Central configuration for Tailwind
-* Used to customize:
+- Central configuration for Tailwind
+- Used to customize:
 
-  * Colors
-  * Fonts
-  * Spacing
-  * Breakpoints
-* Can be extended later for branding and design tokens
+  - Colors
+  - Fonts
+  - Spacing
+  - Breakpoints
+- Can be extended later for branding and design tokens
 
 ---
 
 ### `postcss.config.js`
 
-* Configures PostCSS to process Tailwind at build time
-* Enables features like:
+- Configures PostCSS to process Tailwind at build time
+- Enables features like:
 
-  * Utility generation
-  * Vendor prefixing
-  * Tree-shaking unused styles
+  - Utility generation
+  - Vendor prefixing
+  - Tree-shaking unused styles
 
 ---
 
 ### `globals.css`
 
-* Global stylesheet imported in the root layout
-* Includes Tailwind’s core directives:
+- Global stylesheet imported in the root layout
+- Includes Tailwind’s core directives:
 
 ```css
 @tailwind base;
@@ -815,26 +815,26 @@ Although Tailwind is the primary styling solution, **this section of the course 
 
 ### Pre-Written Styles
 
-* Most Tailwind class strings are provided
-* Reduces cognitive load
-* Keeps focus on:
+- Most Tailwind class strings are provided
+- Reduces cognitive load
+- Keeps focus on:
 
-  * Server Components
-  * Data fetching
-  * Routing
-  * Authentication flows
+  - Server Components
+  - Data fetching
+  - Routing
+  - Authentication flows
 
 ---
 
 ### Tailwind vs Styled Components
 
-* The internal management app used **styled-components**
-* The customer-facing site uses **Tailwind CSS**, reflecting current industry trends
-* Tailwind is increasingly preferred for:
+- The internal management app used **styled-components**
+- The customer-facing site uses **Tailwind CSS**, reflecting current industry trends
+- Tailwind is increasingly preferred for:
 
-  * Full-stack React apps
-  * Server Components
-  * Performance-sensitive UIs
+  - Full-stack React apps
+  - Server Components
+  - Performance-sensitive UIs
 
 ---
 
@@ -844,24 +844,24 @@ Tailwind and Next.js complement each other exceptionally well:
 
 ### ⚡ Performance
 
-* Tailwind generates **only the CSS that is actually used**
-* Results in smaller CSS bundles and faster page loads
+- Tailwind generates **only the CSS that is actually used**
+- Results in smaller CSS bundles and faster page loads
 
 ---
 
 ### 🧠 Developer Experience
 
-* Styles live directly alongside markup
-* No context switching between CSS files and components
-* Fits naturally with the component-driven mindset of React and Next.js
+- Styles live directly alongside markup
+- No context switching between CSS files and components
+- Fits naturally with the component-driven mindset of React and Next.js
 
 ---
 
 ### 📱 Responsive Design
 
-* Mobile-first by default
-* Built-in responsive modifiers (`sm:`, `md:`, `lg:`)
-* Makes it easy to ensure the Wild Oasis website looks great on all screen sizes
+- Mobile-first by default
+- Built-in responsive modifiers (`sm:`, `md:`, `lg:`)
+- Makes it easy to ensure the Wild Oasis website looks great on all screen sizes
 
 ---
 
@@ -869,9 +869,9 @@ Tailwind and Next.js complement each other exceptionally well:
 
 Using Tailwind CSS in this project provides:
 
-* A modern, scalable styling approach
-* Excellent performance characteristics
-* A workflow that aligns perfectly with Next.js Server Components
+- A modern, scalable styling approach
+- Excellent performance characteristics
+- A workflow that aligns perfectly with Next.js Server Components
 
 With styling infrastructure in place, the focus can now shift fully toward **building real features**, **fetching data**, and **creating interactive user experiences**.
 
@@ -889,9 +889,9 @@ Metadata is defined by exporting a special constant from a `layout.js` or `page.
 
 ### Metadata Basics
 
-* You must export a constant named **`metadata`**
-* It must be an **object**
-* Supported in both `layout.js` and `page.js`
+- You must export a constant named **`metadata`**
+- It must be an **object**
+- Supported in both `layout.js` and `page.js`
 
 ```js
 export const metadata = { ... };
@@ -899,13 +899,13 @@ export const metadata = { ... };
 
 ### Common Static Metadata Fields
 
-* **`title`**
+- **`title`**
 
-  * Appears in the browser tab
-  * Used as the clickable title in search results
-* **`description`**
+  - Appears in the browser tab
+  - Used as the clickable title in search results
+- **`description`**
 
-  * Used by search engines as the page summary
+  - Used by search engines as the page summary
 
 ```js
 export const metadata = {
@@ -922,9 +922,9 @@ Next.js allows defining a **global title template** in the root layout.
 
 ### Why Use Templates?
 
-* Avoid repetition
-* Enforce consistent branding
-* Child pages only define their unique title segment
+- Avoid repetition
+- Enforce consistent branding
+- Child pages only define their unique title segment
 
 ### Root Layout Example
 
@@ -961,9 +961,9 @@ Cabins | The Wild Oasis
 
 For pages that depend on dynamic data (e.g., fetching cabin info):
 
-* Use **`generateMetadata()`**
-* Runs on the server
-* Can fetch data before setting metadata
+- Use **`generateMetadata()`**
+- Runs on the server
+- Can fetch data before setting metadata
 
 > ⚠️ Not covered in this lecture, but fully supported by Next.js.
 
@@ -975,12 +975,12 @@ Next.js 14 uses **automatic file detection** for favicons.
 
 ### How It Works
 
-* Place an image file in the **root of the `app/` folder**
-* Supported names:
+- Place an image file in the **root of the `app/` folder**
+- Supported names:
 
-  * `icon.png`
-  * `favicon.ico`
-  * `icon.jpg`
+  - `icon.png`
+  - `favicon.ico`
+  - `icon.jpg`
 
 ```txt
 app/
@@ -991,24 +991,24 @@ app/
 
 ### Key Advantages
 
-* No `<link rel="icon">` needed
-* Next.js auto-generates `<head>` tags
-* Works across all routes automatically
+- No `<link rel="icon">` needed
+- Next.js auto-generates `<head>` tags
+- Works across all routes automatically
 
 ### Best Practice
 
-* Use **PNG**
-* Prefer **transparent backgrounds**
-* Size: `32×32` or `64×64`
+- Use **PNG**
+- Prefer **transparent backgrounds**
+- Size: `32×32` or `64×64`
 
 ---
 
 ## Summary
 
-* Metadata is handled via exported `metadata` objects
-* Title templates ensure consistent branding
-* Favicons are auto-detected via file conventions
-* No manual `<head>` manipulation required
+- Metadata is handled via exported `metadata` objects
+- Title templates ensure consistent branding
+- Favicons are auto-detected via file conventions
+- No manual `<head>` manipulation required
 
 This approach aligns perfectly with **Next.js server-first architecture** and keeps your app **SEO-friendly and maintainable**.
 
@@ -1026,27 +1026,27 @@ This is handled through the **`next/font`** module.
 
 ### Zero Layout Shift (CLS Prevention)
 
-* Next.js automatically applies **size-adjust** CSS properties
-* Fallback fonts occupy the **same visual space** as the custom font
-* Prevents text from “jumping” when the font loads
+- Next.js automatically applies **size-adjust** CSS properties
+- Fallback fonts occupy the **same visual space** as the custom font
+- Prevents text from “jumping” when the font loads
 
 ---
 
 ### Automatic Self-Hosting
 
-* When using **Google Fonts**, Next.js:
+- When using **Google Fonts**, Next.js:
 
-  * Downloads font files at build time
-  * Serves them from your own deployment
-* No runtime requests to Google’s CDN
+  - Downloads font files at build time
+  - Serves them from your own deployment
+- No runtime requests to Google’s CDN
 
 ---
 
 ### Privacy & Speed
 
-* No external font requests
-* Faster first paint
-* Improved privacy (no third-party tracking)
+- No external font requests
+- Faster first paint
+- Improved privacy (no third-party tracking)
 
 ---
 
@@ -1070,13 +1070,13 @@ const inter = Inter({
 
 **Key options:**
 
-* **`subsets`**
+- **`subsets`**
   Reduces bundle size by loading only required characters
 
-* **`weight`**
+- **`weight`**
   Required unless the font is variable
 
-* **`display: 'swap'`**
+- **`display: 'swap'`**
   Ensures text is visible immediately using a fallback font
 
 ---
@@ -1125,17 +1125,43 @@ Useful for headings, branding, or accent typography.
 
 ## 4. Best Practices
 
-* Always use `next/font` instead of `<link>` tags
-* Define global fonts in `app/layout.js`
-* Limit subsets and weights to what you actually use
-* Prefer variable fonts when available
+- Always use `next/font` instead of `<link>` tags
+- Define global fonts in `app/layout.js`
+- Limit subsets and weights to what you actually use
+- Prefer variable fonts when available
 
 ---
 
 ## Summary
 
-* `next/font` eliminates layout shift and improves performance
-* Fonts are self-hosted and privacy-friendly
-* Configuration is declarative and type-safe
-* Integrates seamlessly with Next.js Server Components
+- `next/font` eliminates layout shift and improves performance
+- Fonts are self-hosted and privacy-friendly
+- Configuration is declarative and type-safe
+- Integrates seamlessly with Next.js Server Components
 
+---
+
+## Improving the Navigation
+
+The initial navigation was a simple list of unstyled links. To give the site a more professional, cohesive feel, the following improvements are implemented:
+
+- **Component migration:** replace the basic nav with the pre-styled `Navigation` component from the starter files.
+- **Tailwind styling:** use Tailwind utility classes so the links match the overall UI.
+- **Logo integration:** add a dedicated `Logo` component to the header to reinforce branding across all pages.
+
+## Completing the Root Layout
+
+The root layout (`app/layout.js`) is finalized as the structural foundation for the entire site:
+
+- **Header + main wrapper:** a `<header>` for `Logo` and `Navigation`, plus a `<main>` that wraps `{children}` for consistent spacing and alignment.
+- **Flexbox layout:** a `flex-col` structure so the header stays at the top and the main content fills the remaining vertical space.
+- **Background + overlay:** where needed, use a background image with an overlay to keep text readable over photography.
+
+## The Final Root Structure
+
+With these additions, the root layout provides a consistent shell for every route:
+
+1. **`<html>` / `<body>` tags:** the required top-level wrappers.
+2. **Global font:** the optimized Google Font (e.g. Inter) applied for consistent typography.
+3. **Shared header:** branding + navigation that persists across routes.
+4. **Dynamic content:** the `{children}` slot where route pages (Home, Cabins, About, Account) are rendered.
