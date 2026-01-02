@@ -1305,3 +1305,29 @@ If you later expand the guest area under `/account`, you might structure it like
 - **Automatic organization:** related pages stay grouped by folder.
 - **Scoped shared UI:** add a `layout.js` inside `app/account/` to share UI (e.g. a sidebar) across all `/account/*` routes.
 - **Predictable navigation:** the URL maps directly to the folder path, making pages easy to locate in the codebase.
+
+---
+
+## Nested Layouts
+
+Nested layouts let you apply **section-specific UI** to a route segment while still inheriting the global root layout. You create one by adding a `layout.js` inside a subfolder of `app/`.
+
+### Why Nested Layouts Are Powerful
+
+- **Persistence:** like the root layout, a nested layout stays mounted while you navigate between sibling routes in that segment (great for sidebars or tabs that should keep state).
+- **Automatic hierarchy:** Next.js nests layouts for you. For example, `/account/profile` renders inside `app/account/layout.js`, which itself renders inside `app/layout.js`.
+- **Shared UI by section:** ideal for dashboards, filters, and navigation that should appear only within a specific area of the app.
+
+### Implementation in This Project
+
+This repo uses a nested layout for the account area:
+
+- **Location:** `app/account/layout.js`
+- **Structure:** renders a `SideNavigation` component alongside `{children}`.
+- **Result:** `/account/*` pages get the sidebar automatically, while public routes like `/cabins` and `/about` keep the simpler layout.
+
+### Developer Benefits
+
+- **Cleaner architecture:** global layout stays truly global; section UI lives with the section.
+- **Easy to reason about:** the folder structure tells you exactly which layout wraps a page.
+- **Localized data loading:** layouts can fetch their own data in the App Router, keeping logic close to where it’s used.
