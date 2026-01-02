@@ -876,3 +876,139 @@ Using Tailwind CSS in this project provides:
 With styling infrastructure in place, the focus can now shift fully toward **building real features**, **fetching data**, and **creating interactive user experiences**.
 
 ---
+
+## Metadata & Favicon in Next.js (App Router)
+
+Next.js provides a **built-in, file-based convention** for handling metadata and favicons, improving **SEO** and **UX** with minimal configuration.
+
+---
+
+## 1. Adding Page Metadata
+
+Metadata is defined by exporting a special constant from a `layout.js` or `page.js` file.
+
+### Metadata Basics
+
+* You must export a constant named **`metadata`**
+* It must be an **object**
+* Supported in both `layout.js` and `page.js`
+
+```js
+export const metadata = { ... };
+```
+
+### Common Static Metadata Fields
+
+* **`title`**
+
+  * Appears in the browser tab
+  * Used as the clickable title in search results
+* **`description`**
+
+  * Used by search engines as the page summary
+
+```js
+export const metadata = {
+  title: "Cabins",
+  description: "Explore our luxury cabins",
+};
+```
+
+---
+
+## 2. Metadata Title Templates
+
+Next.js allows defining a **global title template** in the root layout.
+
+### Why Use Templates?
+
+* Avoid repetition
+* Enforce consistent branding
+* Child pages only define their unique title segment
+
+### Root Layout Example
+
+```js
+// app/layout.js
+export const metadata = {
+  title: {
+    template: "%s | The Wild Oasis",
+    default: "Welcome | The Wild Oasis",
+  },
+  description:
+    "Luxurious cabin hotel located in the heart of the Italian Dolomites.",
+};
+```
+
+### Child Page Example
+
+```js
+// app/cabins/page.js
+export const metadata = {
+  title: "Cabins",
+};
+```
+
+**Final browser tab title:**
+
+```
+Cabins | The Wild Oasis
+```
+
+---
+
+## 3. Dynamic Metadata (Overview)
+
+For pages that depend on dynamic data (e.g., fetching cabin info):
+
+* Use **`generateMetadata()`**
+* Runs on the server
+* Can fetch data before setting metadata
+
+> ⚠️ Not covered in this lecture, but fully supported by Next.js.
+
+---
+
+## 4. Adding a Favicon
+
+Next.js 14 uses **automatic file detection** for favicons.
+
+### How It Works
+
+* Place an image file in the **root of the `app/` folder**
+* Supported names:
+
+  * `icon.png`
+  * `favicon.ico`
+  * `icon.jpg`
+
+```txt
+app/
+ ├─ icon.png
+ ├─ layout.js
+ └─ page.js
+```
+
+### Key Advantages
+
+* No `<link rel="icon">` needed
+* Next.js auto-generates `<head>` tags
+* Works across all routes automatically
+
+### Best Practice
+
+* Use **PNG**
+* Prefer **transparent backgrounds**
+* Size: `32×32` or `64×64`
+
+---
+
+## Summary
+
+* Metadata is handled via exported `metadata` objects
+* Title templates ensure consistent branding
+* Favicons are auto-detected via file conventions
+* No manual `<head>` manipulation required
+
+This approach aligns perfectly with **Next.js server-first architecture** and keeps your app **SEO-friendly and maintainable**.
+

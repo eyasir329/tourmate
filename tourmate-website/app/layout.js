@@ -4,8 +4,12 @@ import Navigation from "./_components/Navigation";
 import "@/app/_styles/globals.css";
 
 export const metadata = {
-  title: "tourmate",
-  description: "Explore the world with tourmate",
+  // title: "tourmate",
+  title: {
+    default: "Welcome - tourmate",
+    template: "%s - tourmate",
+  },
+  description: "Explore the world with tourmate",//by default for all pages
 };
 
 export default function RootLayout({ children }) {
