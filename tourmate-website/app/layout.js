@@ -1,6 +1,8 @@
 import Logo from "./_components/Logo";
 import Navigation from "./_components/Navigation";
 
+import "@/app/_styles/globals.css";
+
 export const metadata = {
   title: "tourmate",
   description: "Explore the world with tourmate",
@@ -9,7 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-primary-950 text-primary-100 min-h-screen">
         <header>
           <Logo />
           <Navigation />
