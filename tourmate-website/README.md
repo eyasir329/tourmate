@@ -1225,3 +1225,26 @@ export default function Home() {
 ### Performance Impact
 
 The component can drastically reduce file sizes. For instance, a high-quality original image can be optimized and compressed by Next.js down to a much smaller size (e.g., from several hundred kilobytes to under 10 KB) without noticeable loss in quality for the user.
+
+---
+
+## Building the Homepage
+
+The homepage for **The Wild Oasis** turns the initial placeholder into a focused, high-performance landing page using Next.js primitives and Tailwind CSS.
+
+### Structural Overview
+
+The homepage lives at `app/page.js`. It’s the first entry point for most visitors, combining a full-bleed background image with a clear call-to-action.
+
+### Key Components
+
+- **Main container:** the page content is wrapped in a `<main>` with spacing utilities (e.g. `mt-24`) so it sits comfortably beneath the header.
+- **Background image:** a full-screen background is rendered via Next.js `Image` (`next/image`) and positioned as a fixed layer.
+- **Scaling & layout:** `object-cover` / `object-top` keep the image responsive while preserving the focal point.
+- **Performance tweaks:** `quality={80}` helps reduce bandwidth, and `placeholder="blur"` provides a smooth loading transition.
+- **Hero content:** a prominent `<h1>` and a single CTA keep the page scannable and goal-driven.
+- **Call to action:** a `Link` routes users to `/cabins` with SPA navigation.
+
+### Performance Benefits
+
+Using `next/image` ensures the background is served in optimized formats and sizes, improving perceived speed and supporting strong **Largest Contentful Paint (LCP)**—especially on mobile and slower connections.
