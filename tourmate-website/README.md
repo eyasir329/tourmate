@@ -1165,3 +1165,63 @@ With these additions, the root layout provides a consistent shell for every rout
 2. **Global font:** the optimized Google Font (e.g. Inter) applied for consistent typography.
 3. **Shared header:** branding + navigation that persists across routes.
 4. **Dynamic content:** the `{children}` slot where route pages (Home, Cabins, About, Account) are rendered.
+
+---
+
+## Image Optimization with `next/image`
+
+Image optimization is a major lever for real-world performance. Next.js ships a dedicated `Image` component (from `next/image`) that replaces the standard HTML `<img>` tag and provides strong defaults out of the box.
+
+### Key Benefits
+
+- **Size optimization:** automatically serves the right image size per device and can deliver modern formats like WebP or AVIF.
+- **Visual stability (CLS):** helps prevent layout shift while images load by reserving space up front.
+- **Faster page loads:** images are lazy-loaded by default (loaded only when they enter the viewport).
+- **On-the-fly compression:** images can be optimized on request, letting you control quality directly in code.
+
+### Implementation Strategies
+
+Next.js handles optimization differently depending on where the image lives:
+
+#### 1) Static local images
+
+For images stored in the repo, you import the file directly.
+
+- **Automatic dimensions:** Next.js can infer `width` and `height` for imported files to prevent layout shifts.
+- **Blur placeholders:** add `placeholder="blur"` to show a low-res preview while the full image loads.
+
+#### 2) Remote images
+
+For images hosted externally (Supabase, S3, etc.), you pass a URL.
+
+- **Manual dimensions:** provide `width` and `height` (or use `fill`) since Next.js can’t inspect the remote asset at build time.
+- **Security configuration:** explicitly allow the remote domain in `next.config.js`.
+
+### Usage Example: Background Images
+
+To create a responsive background image that covers a container, use `fill` plus CSS:
+
+```javascript
+import Image from "next/image";
+import bg from "@/public/bg.png";
+
+export default function Home() {
+  return (
+    <div className="relative h-screen">
+      <Image 
+        src={bg} 
+        fill 
+        className="object-cover object-top" 
+        placeholder="blur"
+        quality={80} // Adjust compression quality (1-100)
+        alt="Background image of a cabin" 
+      />
+    </div>
+  );
+}
+
+```
+
+### Performance Impact
+
+The component can drastically reduce file sizes. For instance, a high-quality original image can be optimized and compressed by Next.js down to a much smaller size (e.g., from several hundred kilobytes to under 10 KB) without noticeable loss in quality for the user.
