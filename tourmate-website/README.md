@@ -338,3 +338,422 @@ Suggested options during setup:
 | Tailwind CSS | Yes |
 | App Router | Yes |
 | Import Alias | No |
+
+---
+
+## Project Planning
+
+![img](https://i.ibb.co.com/WvTByRN1/P1.png)
+
+## Transition to Building a Real-World Next.js Application
+
+This section marks the shift from **learning Next.js concepts in isolation** to **building a real-world, production-style application**. Instead of experimenting with small demo routes, we now focus on establishing a scalable architecture for **The Wild Oasis** customer-facing website.
+
+This is where the project starts to resemble how modern Next.js applications are built in professional environments.
+
+---
+
+## Key Objectives of This Section
+
+### 1. Establish a Professional Project Structure
+
+You will reorganize the codebase into a **clean, scalable, and maintainable structure**, following widely accepted industry best practices for Next.js App Router projects.
+
+This includes:
+
+- Logical folder organization
+- Clear separation of concerns
+- Reusable components and layouts
+
+---
+
+### 2. Transition from Demos to Real Development
+
+Up to this point, the focus has been on:
+
+- Understanding routing
+- Exploring layouts
+- Learning Server vs Client Components
+- Experimenting with data fetching
+
+Now, those concepts will be **applied together** to build a cohesive, real product rather than isolated examples.
+
+---
+
+### 3. Project Context
+
+The application built in this section is the **customer-facing website** for **The Wild Oasis**.
+
+- It consumes the **same core data** as the internal hotel management app built earlier in the course
+- The emphasis is on **user experience**, **performance**, and **clean UI architecture**
+- The app is designed for real users, not just developers
+
+---
+
+## Core Features to Be Implemented
+
+Over the course of this section, the following high-level features will be built:
+
+### 🏕️ Cabin Exploration
+
+A public-facing area where visitors can:
+
+- Browse all available cabins
+- View cabin details and pricing
+- Explore the resort visually
+
+---
+
+### 📅 Reservations
+
+Authenticated users will be able to:
+
+- Create new reservations
+- Update existing bookings
+- Cancel reservations when needed
+
+This feature will introduce real-world data mutations and server interactions.
+
+---
+
+### 👤 Guest Accounts
+
+A secure user area where guests can:
+
+- Manage personal profile information
+- View booking history
+- Access account-specific data
+
+---
+
+## Outcome
+
+By the end of this section, you will have transitioned from a **basic Next.js setup** to a **fully structured, real-world application foundation**, ready for:
+
+- Complex server-side data fetching
+- Authentication and authorization
+- Full-stack interactivity using Server and Client Components
+
+This marks the point where **Next.js stops being theoretical** and starts becoming a practical tool for building production-ready web applications.
+
+---
+
+## Project Planning & Architecture Overview
+
+Building a production-grade application like **The Wild Oasis** customer website requires a deliberate planning phase. Before writing features, we define **what the app does**, **which technologies it uses**, and **how responsibilities are split between server and client**.
+
+This planning ensures the project scales cleanly and remains maintainable as complexity increases.
+
+---
+
+![img](https://i.ibb.co.com/hJRXtfBQ/P2.png)
+![img](https://i.ibb.co.com/99SSMykB/P3.png)
+
+## Project Goals & Core Features
+
+The goal is to build a **customer-facing companion application** that integrates with the same backend used by the internal hotel management system.
+
+The website focuses on three core functional areas:
+
+### 🏕️ Cabin Exploration
+
+Public pages where users can:
+
+- Browse all available cabins
+- View detailed cabin information
+- Explore pricing, capacity, and availability
+
+These pages are optimized for SEO and fast initial load.
+
+---
+
+### 📅 Reservations
+
+Authenticated users can:
+
+- Create new cabin reservations
+- Update existing bookings
+- Cancel reservations
+
+This feature introduces server mutations, authorization, and real-time data consistency.
+
+---
+
+### 👤 Guest Management
+
+A private **Guest Area** where users can:
+
+- Authenticate using Google
+- Manage personal profile information
+- View reservation history and account data
+
+---
+
+## Technology Stack
+
+The project uses a modern, server-first React architecture built around Next.js:
+
+### Core Framework
+
+- **Next.js (App Router)**
+  Handles routing, server-side rendering, streaming, layouts, and full-stack data operations using Server Components and Server Actions.
+
+---
+
+### Styling
+
+- **Tailwind CSS**
+  Used exclusively for styling. Most utility classes are pre-configured, allowing focus on application logic and architecture rather than design decisions.
+
+![img](https://i.ibb.co.com/ccqH33ps/P4.png)
+
+---
+
+### Backend & Authentication
+
+- **Supabase**
+
+  - PostgreSQL database
+  - Authentication services
+  - Secure server-side data access
+
+- **NextAuth.js**
+
+  - Handles authentication flows
+  - Integrates Google OAuth for social login
+  - Works seamlessly with Next.js App Router
+
+---
+
+## Application Architecture
+
+To balance performance, security, and interactivity, the application follows a **hybrid Server / Client Component architecture**.
+
+### Server Components (Default)
+
+Used for:
+
+- Pages
+- Data fetching
+- Secure backend access
+- SEO-critical content
+
+Benefits:
+
+- Zero client-side bundle size
+- Direct database access
+- Faster Largest Contentful Paint (LCP)
+
+---
+
+### Client Components (Selective)
+
+Used only where necessary:
+
+- Forms
+- Buttons
+- Interactive UI elements
+- State-driven behavior
+
+These components act as **small interactive islands** embedded inside mostly server-rendered pages.
+
+---
+
+### Rendering Strategy
+
+Different pages use different rendering strategies based on their requirements:
+
+| Page Type            | Rendering Mode        | Reason                            |
+| -------------------- | --------------------- | --------------------------------- |
+| Home, About          | **Static Rendering**  | Maximum performance and SEO       |
+| Cabins               | **Dynamic Rendering** | Always show fresh availability    |
+| Account / Guest Area | **Dynamic Rendering** | User-specific, authenticated data |
+
+---
+
+## Why This Approach Works
+
+This architecture provides:
+
+- **Excellent performance** through server-first rendering
+- **Minimal JavaScript** sent to the browser
+- **Secure data access** with no exposed credentials
+- **Scalability** as features and complexity grow
+- **Clean separation of concerns** between UI, data, and interactivity
+
+By defining these decisions upfront, the project avoids common architectural pitfalls and sets a strong foundation for building a real-world Next.js application.
+
+---
+
+## Organizing the Project Structure
+
+As a Next.js application grows, **project organization becomes critical** for maintainability, scalability, and team collaboration. This section focuses on transitioning from the default scaffold into a **clean, professional structure**, with special emphasis on **component organization**.
+
+---
+
+## Common Component Organization Strategies
+
+There is no single “correct” way to organize React components, but several patterns are commonly used in production projects:
+
+### 1️⃣ Single Global Components Folder
+
+All components live in one top-level `components` directory.
+
+**Pros**
+
+- Simple and easy to understand
+- Good for small projects
+
+**Cons**
+
+- Quickly becomes cluttered
+- Hard to reason about ownership and responsibility as the app grows
+
+---
+
+### 2️⃣ Route-Based Component Folders
+
+Each route has its own local `components` folder (e.g. `app/cabins/components`).
+
+**Pros**
+
+- Components live close to where they are used
+- Clear ownership per route
+
+**Cons**
+
+- Sharing components across routes becomes awkward
+- Can lead to duplication
+
+---
+
+### 3️⃣ Atomic Design
+
+Components are grouped by abstraction level (atoms, molecules, organisms, templates).
+
+**Pros**
+
+- Highly systematic
+- Works well in large design systems
+
+**Cons**
+
+- Adds conceptual overhead
+- Often overkill for most product-focused apps
+
+---
+
+## Chosen Strategy for *The Wild Oasis*
+
+For this project, the goal is **clarity, scalability, and simplicity**.
+
+### 🧼 Keep the `app` Folder Clean
+
+The `app` directory should contain **only**:
+
+- Routes
+- Next.js special files (`page.js`, `layout.js`, `loading.js`, etc.)
+
+It should **not** become a dumping ground for reusable UI logic.
+
+---
+
+### 📁 Global `components` Folder
+
+All reusable React components live in a **top-level `components` directory**, outside the `app` folder.
+
+```txt
+components/
+  ui/
+  navigation/
+  cabins/
+  auth/
+```
+
+**Benefits**
+
+- Clear separation between routing and UI logic
+- Easy to reuse components across multiple routes
+- Scales well as features grow
+
+---
+
+### 🗂️ Internal Categorization
+
+Inside `components`, related components are grouped logically:
+
+- `ui/` → Generic, reusable UI primitives (buttons, spinners, badges)
+- `navigation/` → Header, nav links, menus
+- `cabins/` → Cabin-related components
+- `auth/` → Authentication and user-related UI
+
+This structure reflects **domain-driven design** rather than file-type grouping.
+
+---
+
+## Using Path Aliases
+
+To avoid deeply nested relative imports like:
+
+```js
+import Button from "../../../components/ui/Button";
+```
+
+Next.js supports **path aliases**.
+
+### The `@` Alias
+
+By default, the `@` alias points to the project root (or `src/` if used).
+
+This enables clean, predictable imports:
+
+```js
+import Button from "@/components/ui/Button";
+import Navigation from "@/components/navigation/Navigation";
+```
+
+**Advantages**
+
+- Readable imports
+- No dependency on folder depth
+- Easier refactoring
+
+---
+
+## Cleaning Up the Initial Project
+
+Before building real features, the initial scaffold must be cleaned.
+
+### 🧹 Standardize Page Components
+
+- Each `page.js` exports a default component named `Page`
+- Remove placeholder text like `Hello Next!`
+
+```js
+export default function Page() {
+  return <h1>Cabins</h1>;
+}
+```
+
+---
+
+### 🗑️ Remove Boilerplate & Experiments
+
+- Delete unused files from the learning phase
+- Remove experimental code
+- Ensure the project reflects **intentional structure**, not tutorials
+
+---
+
+## Why This Matters
+
+This organization:
+
+- Reduces cognitive load
+- Encourages reuse
+- Keeps routing and UI concerns separate
+- Matches how professional Next.js teams structure projects
+
+With a clean foundation in place, the project is now ready to scale into real-world features like authentication, reservations, and complex data fetching.
+
+---
