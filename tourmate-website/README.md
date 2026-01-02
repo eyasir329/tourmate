@@ -1,63 +1,72 @@
 # Tourmate Website
 
-Customer-facing website for **The Wild Oasis**, built with **Next.js 14 (App Router)**.
+Customer-facing website for **The Wild Oasis**, built with **Next.js 14 (App Router)** and **Tailwind CSS**.
 
-This README is intentionally split into two parts:
+This README contains only project-related information (setup, structure, routes, and implementation notes).
 
-- **Project README**: how to run the app + what’s inside the repo
-- **Next.js Notes**: SSR/RSC/App Router concepts used in this codebase
+---
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Status](#status)
 - [Tech Stack](#tech-stack)
+- [Requirements](#requirements)
 - [Getting Started](#getting-started)
+- [Scripts](#scripts)
 - [Project Structure](#project-structure)
-- [Next.js App Router Notes](#nextjs-app-router-notes)
-  - [Routing](#routing)
-  - [Navigation with Link](#navigation-with-link)
-  - [Layouts](#layouts)
-  - [Loading UI with loadingjs](#loading-ui-with-loadingjs)
-  - [Server vs Client Components](#server-vs-client-components)
-  - [Data Fetching in Server Components](#data-fetching-in-server-components)
-  - [React Server Components RSC](#react-server-components-rsc)
-  - [How RSC Works Internally](#how-rsc-works-internally)
-  - [RSC vs SSR in Nextjs](#rsc-vs-ssr-in-nextjs)
+- [Routes](#routes)
+- [Path Aliases](#path-aliases)
+- [Styling (Tailwind CSS)](#styling-tailwind-css)
+- [Images (next/image)](#images-nextimage)
+- [Metadata, Fonts, and Icons](#metadata-fonts-and-icons)
+- [Account Area (Nested Layout)](#account-area-nested-layout)
+- [Data Layer Notes](#data-layer-notes)
 - [Developer Notes](#developer-notes)
-- [Scaffolding Notes](#scaffolding-notes)
 
 ---
 
 ## Overview
 
-Tourmate is a Next.js App Router project where users can:
+Tourmate is a Next.js App Router project where guests can:
 
-- View cabins
-- Make and manage reservations
+- Browse cabins
+- View their reservations
 - Update profile information
 
-Next.js renders HTML on the server for the initial request, then uses React Server Components (RSC) to keep most UI server-only while still enabling SPA-like navigation.
+Next.js renders HTML on the server for the initial request, and then uses React Server Components (RSC) to keep most UI server-only while still enabling SPA-style navigation.
+
+## Status
+
+This repo is actively being built and some parts are still **stubbed**:
+
+- Some pages currently use placeholder arrays (e.g., cabins and bookings)
+- The server data module references Supabase, but the Supabase client wiring is not included yet
+
+The UI structure, routing, and layouts are in place.
 
 ## Tech Stack
 
-- **Next.js 14** (App Router)
-- **React 18**
+- **Next.js** 14 (App Router)
+- **React** 18
 - **Tailwind CSS**
+- **Heroicons** (`@heroicons/react`)
+- **date-fns**
 
-## Getting Started
-
-### Prerequisites
+## Requirements
 
 - Node.js (LTS recommended)
 - npm
 
-### Install
+## Getting Started
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Run the dev server
+Run the dev server:
 
 ```bash
 npm run dev
@@ -65,9 +74,9 @@ npm run dev
 
 Open:
 
-- `http://localhost:3000`
+- <http://localhost:3000>
 
-### Common scripts
+## Scripts
 
 | Command | Description |
 | --- | --- |
@@ -78,28 +87,28 @@ Open:
 
 ## Project Structure
 
+High-level structure (as it exists in this repo):
+
 ```text
 app/
-  layout.js        # Root layout (required)
-  page.js          # Home route (/)
-  loading.js       # Route-level loading UI
-  about/page.js    # /about
-  cabins/page.js   # /cabins
-  account/page.js  # /account
-  components/      # Shared UI components
-public/            # Static assets
+  _components/        # Shared UI components (Header, Navigation, cards, etc.)
+  _lib/               # Data helpers (server-side modules)
+  _styles/            # Global styles (Tailwind directives live here)
+  about/page.js       # /about
+  account/            # /account + nested routes + nested layout
+    layout.js         # Account-area nested layout (sidebar)
+    page.js           # /account
+    profile/page.js   # /account/profile
+    reservations/page.js # /account/reservations
+  cabins/page.js      # /cabins
+  icon.png            # App icon (auto-detected)
+  layout.js           # Root layout (required)
+  loading.js          # Route-level loading UI
+  page.js             # Home route (/)
+public/               # Static assets
 ```
 
----
-
-## Next.js App Router Notes
-
-### Routing
-
-Next.js routing is **file system–based** in the `app/` directory.
-
-- Each folder maps to a URL segment
-- A route becomes public only when the folder contains `page.js`
+## Routes
 
 Routes in this repo:
 
@@ -109,197 +118,89 @@ Routes in this repo:
 | `/cabins` | `app/cabins/page.js` |
 | `/about` | `app/about/page.js` |
 | `/account` | `app/account/page.js` |
+| `/account/profile` | `app/account/profile/page.js` |
+| `/account/reservations` | `app/account/reservations/page.js` |
 
-Reserved route files (common ones):
+## Path Aliases
 
-| File | Purpose |
-| --- | --- |
-| `layout.js` | Shared UI wrapper for a route segment |
-| `loading.js` | Loading UI (automatic Suspense boundary) |
-| `error.js` | Error boundary for a route segment |
-| `not-found.js` | 404 handling |
-
-### Navigation with Link
-
-Use `next/link` for navigation. It prevents full page reloads and can prefetch routes in production.
+This project uses an `@` alias (configured in `jsconfig.json`):
 
 ```js
-import Link from "next/link";
-
-export default function Navigation() {
-  return (
-    <nav>
-      <Link href="/">Home</Link>
-      <Link href="/cabins">Cabins</Link>
-      <Link href="/about">About</Link>
-      <Link href="/account">Guest area</Link>
-    </nav>
-  );
-}
+import bg from "@/public/bg.png";
+import SelectCountry from "@/app/_components/SelectCountry";
 ```
 
-### Layouts
+## Styling (Tailwind CSS)
 
-Layouts define shared UI that persists across route changes.
+Tailwind is configured via:
 
-Key points:
+- `tailwind.config.js`
+- `postcss.config.mjs`
+- `app/_styles/globals.css` (imports Tailwind layers)
 
-- `app/layout.js` is required
-- Root layout must render `<html>` and `<body>`
-- Layout receives `children` (active page / nested layout)
+If VS Code shows `Unknown at rule @tailwind`, it’s editor CSS validation (not Tailwind). This repo already includes workspace settings to ignore unknown at-rules in `.vscode/settings.json`.
 
-Nested layouts work by placing `layout.js` inside a nested folder.
+## Images (next/image)
 
-### Loading UI with loadingjs
+This project uses Next.js `Image` for optimized images.
 
-`loading.js` is the App Router convention for route-level loading UI.
+### Home page background
 
-- Creating `loading.js` in a segment adds an automatic Suspense boundary
-- The loading UI can be streamed while server rendering/data are still resolving
-- Parent `loading.js` applies to nested routes unless overridden
-
-### Server vs Client Components
-
-In the App Router:
-
-- **Server Components are the default**
-- Client Components are opt-in using:
+The home page renders a full-screen background image as a **fixed layer** (so it doesn’t require a positioned parent for `fill`):
 
 ```js
-"use client";
+<Image
+  src={bg_img}
+  placeholder="blur"
+  quality={80}
+  sizes="100vw"
+  className="fixed inset-0 -z-10 h-full w-full object-cover object-top"
+  alt="Mountains and forests with two cabins"
+/>
 ```
 
-Server Components cannot:
+### About page patterns
 
-- Use client hooks (`useState`, `useEffect`, etc.)
-- Attach event handlers (`onClick`, etc.)
-- Access browser APIs (`window`, `document`, `localStorage`, etc.)
+The About page shows two common patterns:
 
-Client Components are for:
+- **Static import** (dimensions inferred, blur placeholder supported)
+- **Responsive fill** inside a sized, positioned parent (`relative` + `aspect-square`)
 
-- Interactivity (forms, buttons)
-- Local state/effects
-- Browser-only APIs
+## Metadata, Fonts, and Icons
 
-Best practice: keep most of the tree server-rendered; push interactivity to smaller “leaf” components.
+### Metadata
 
-### Data Fetching in Server Components
+Pages and layouts export `metadata`. The root layout uses a title template:
 
-Server Components can fetch data directly with `async/await` (no `useEffect` needed):
+- Template: `%s - tourmate`
+- Default: `Welcome - tourmate`
 
-```js
-export default async function CabinsPage() {
-  const res = await fetch("https://example.com/api/cabins");
-  const cabins = await res.json();
+### Fonts
 
-  return <pre>{JSON.stringify(cabins, null, 2)}</pre>;
-}
-```
+The root layout loads **Josefin Sans** using `next/font/google` for automatic optimization.
 
-Why this matters:
+### App icon
 
-- Avoids client-side request waterfalls
-- Keeps secrets/server-only logic out of the browser
-- Reduces client JavaScript and improves performance
+The app icon is provided via `app/icon.png` (auto-detected by Next.js).
 
----
+## Account Area (Nested Layout)
 
-### React Server Components RSC
+The account section has its own nested layout:
 
-React Server Components (RSC) move most rendering work from the browser to the server.
+- File: `app/account/layout.js`
+- UI: renders `SideNavigation` alongside `{children}`
+- Result: `/account/*` pages get the sidebar automatically
 
-![n1](https://i.ibb.co.com/r2t6v2c8/N2.png)
+This is the cleanest way to apply section-specific UI while still inheriting the root layout.
 
-![n1](https://i.ibb.co.com/r2CpLFz4/N3.png)
+## Data Layer Notes
 
-Core idea:
+`app/_lib/data-service.js` contains data helpers (cabins, bookings, guests, settings, etc.).
 
-- Server Components execute on the server and do not ship their code to the browser
-- Only Client Components ship JavaScript and get hydrated
+Important note:
 
-![n1](https://i.ibb.co.com/gMWnb7qs/N4.png)
-
-Server vs Client Components overview:
-
-![n1](https://i.ibb.co.com/23Xj1WwD/N5.png)
-
-Mental model:
-
-- Server Components = data + structure
-- Client Components = interactivity
-
-![n1](https://i.ibb.co.com/1Jht6nCh/N6.png)
-
-Keep Client Components minimal:
-
-![n1](https://i.ibb.co.com/GQKZFw0X/N7.png)
-
-### How RSC Works Internally
-
-React Server Components split rendering into two phases.
-
-- Server phase: render Server Components and fetch data
-- Client phase: hydrate only Client Components
-
-Pipeline overview:
-
-![n1](https://i.ibb.co.com/k2D2YxNx/N8.png)
-
-![n1](https://i.ibb.co.com/fGB7PcKB/N9.png)
-
-![n1](https://i.ibb.co.com/jvcSR70x/N10.png)
-
-Streaming fits naturally with Suspense:
-
-- Layout renders immediately
-- `loading.js` can stream first
-- Server renders the rest when data is ready
-
-Why it’s fast:
-
-- Less JavaScript shipped
-- Less hydration work
-- Server-only logic never reaches the browser
-
-![n1](https://i.ibb.co.com/dJWsQnN6/N11.png)
-
-![n1](https://i.ibb.co.com/Y7qPqCHs/N12.png)
-
-### RSC vs SSR in Nextjs
-
-RSC and SSR are different concepts that Next.js combines.
-
-Definitions:
-
-- **SSR (Server-Side Rendering)**: a delivery strategy that renders HTML on the server for faster first paint
-- **RSC (React Server Components)**: a component execution model where components run on the server and their code does not ship to the client
-
-Illustrations:
-
-![n1](https://i.ibb.co.com/k281vFB1/N13.png)
-
-![n1](https://i.ibb.co.com/s9gB9d26/N14.png)
-
-How they work together:
-
-- Initial request: SSR HTML + RSC payload
-- Client navigation: mostly RSC payload updates (SPA-like), preserving client state
-
-Summary comparison:
-
-| Feature | SSR | RSC |
-| --- | --- | --- |
-| What it is | Rendering/delivery strategy | Component execution model |
-| Output | HTML | Serialized React tree (RSC payload) |
-| JavaScript sent | Client Components only | Client Components only |
-| Hydration needed | Yes (for Client Components) | Server Components never hydrate |
-
-Most important takeaway:
-
-- SSR decides how content is delivered
-- RSC decides where components execute
-
----
+- The module currently references `supabase` but does not import/create a Supabase client in this repo yet.
+- Treat it as “in-progress scaffolding” until the Supabase client setup is added.
 
 ## Developer Notes
 
@@ -320,1014 +221,3 @@ App Router projects have many `page.js` files. VS Code Custom Labels can show th
 ```bash
 npm install next@latest react@latest react-dom@latest eslint-config-next@latest
 ```
-
-## Scaffolding Notes
-
-This project was scaffolded using `create-next-app`.
-
-```bash
-npx create-next-app@14 tourmate-website
-```
-
-Suggested options during setup:
-
-| Option | Choice |
-| --- | --- |
-| TypeScript | No |
-| ESLint | Yes |
-| Tailwind CSS | Yes |
-| App Router | Yes |
-| Import Alias | No |
-
----
-
-## Project Planning
-
-![img](https://i.ibb.co.com/WvTByRN1/P1.png)
-
-## Transition to Building a Real-World Next.js Application
-
-This section marks the shift from **learning Next.js concepts in isolation** to **building a real-world, production-style application**. Instead of experimenting with small demo routes, we now focus on establishing a scalable architecture for **The Wild Oasis** customer-facing website.
-
-This is where the project starts to resemble how modern Next.js applications are built in professional environments.
-
----
-
-## Key Objectives of This Section
-
-### 1. Establish a Professional Project Structure
-
-You will reorganize the codebase into a **clean, scalable, and maintainable structure**, following widely accepted industry best practices for Next.js App Router projects.
-
-This includes:
-
-- Logical folder organization
-- Clear separation of concerns
-- Reusable components and layouts
-
----
-
-### 2. Transition from Demos to Real Development
-
-Up to this point, the focus has been on:
-
-- Understanding routing
-- Exploring layouts
-- Learning Server vs Client Components
-- Experimenting with data fetching
-
-Now, those concepts will be **applied together** to build a cohesive, real product rather than isolated examples.
-
----
-
-### 3. Project Context
-
-The application built in this section is the **customer-facing website** for **The Wild Oasis**.
-
-- It consumes the **same core data** as the internal hotel management app built earlier in the course
-- The emphasis is on **user experience**, **performance**, and **clean UI architecture**
-- The app is designed for real users, not just developers
-
----
-
-## Core Features to Be Implemented
-
-Over the course of this section, the following high-level features will be built:
-
-### 🏕️ Cabin Exploration
-
-A public-facing area where visitors can:
-
-- Browse all available cabins
-- View cabin details and pricing
-- Explore the resort visually
-
----
-
-### 📅 Reservations
-
-Authenticated users will be able to:
-
-- Create new reservations
-- Update existing bookings
-- Cancel reservations when needed
-
-This feature will introduce real-world data mutations and server interactions.
-
----
-
-### 👤 Guest Accounts
-
-A secure user area where guests can:
-
-- Manage personal profile information
-- View booking history
-- Access account-specific data
-
----
-
-## Outcome
-
-By the end of this section, you will have transitioned from a **basic Next.js setup** to a **fully structured, real-world application foundation**, ready for:
-
-- Complex server-side data fetching
-- Authentication and authorization
-- Full-stack interactivity using Server and Client Components
-
-This marks the point where **Next.js stops being theoretical** and starts becoming a practical tool for building production-ready web applications.
-
----
-
-## Project Planning & Architecture Overview
-
-Building a production-grade application like **The Wild Oasis** customer website requires a deliberate planning phase. Before writing features, we define **what the app does**, **which technologies it uses**, and **how responsibilities are split between server and client**.
-
-This planning ensures the project scales cleanly and remains maintainable as complexity increases.
-
----
-
-![img](https://i.ibb.co.com/hJRXtfBQ/P2.png)
-![img](https://i.ibb.co.com/99SSMykB/P3.png)
-
-## Project Goals & Core Features
-
-The goal is to build a **customer-facing companion application** that integrates with the same backend used by the internal hotel management system.
-
-The website focuses on three core functional areas:
-
-### 🏕️ Cabin Exploration
-
-Public pages where users can:
-
-- Browse all available cabins
-- View detailed cabin information
-- Explore pricing, capacity, and availability
-
-These pages are optimized for SEO and fast initial load.
-
----
-
-### 📅 Reservations
-
-Authenticated users can:
-
-- Create new cabin reservations
-- Update existing bookings
-- Cancel reservations
-
-This feature introduces server mutations, authorization, and real-time data consistency.
-
----
-
-### 👤 Guest Management
-
-A private **Guest Area** where users can:
-
-- Authenticate using Google
-- Manage personal profile information
-- View reservation history and account data
-
----
-
-## Technology Stack
-
-The project uses a modern, server-first React architecture built around Next.js:
-
-### Core Framework
-
-- **Next.js (App Router)**
-  Handles routing, server-side rendering, streaming, layouts, and full-stack data operations using Server Components and Server Actions.
-
----
-
-### Styling
-
-- **Tailwind CSS**
-  Used exclusively for styling. Most utility classes are pre-configured, allowing focus on application logic and architecture rather than design decisions.
-
-![img](https://i.ibb.co.com/ccqH33ps/P4.png)
-
----
-
-### Backend & Authentication
-
-- **Supabase**
-
-  - PostgreSQL database
-  - Authentication services
-  - Secure server-side data access
-
-- **NextAuth.js**
-
-  - Handles authentication flows
-  - Integrates Google OAuth for social login
-  - Works seamlessly with Next.js App Router
-
----
-
-## Application Architecture
-
-To balance performance, security, and interactivity, the application follows a **hybrid Server / Client Component architecture**.
-
-### Server Components (Default)
-
-Used for:
-
-- Pages
-- Data fetching
-- Secure backend access
-- SEO-critical content
-
-Benefits:
-
-- Zero client-side bundle size
-- Direct database access
-- Faster Largest Contentful Paint (LCP)
-
----
-
-### Client Components (Selective)
-
-Used only where necessary:
-
-- Forms
-- Buttons
-- Interactive UI elements
-- State-driven behavior
-
-These components act as **small interactive islands** embedded inside mostly server-rendered pages.
-
----
-
-### Rendering Strategy
-
-Different pages use different rendering strategies based on their requirements:
-
-| Page Type            | Rendering Mode        | Reason                            |
-| -------------------- | --------------------- | --------------------------------- |
-| Home, About          | **Static Rendering**  | Maximum performance and SEO       |
-| Cabins               | **Dynamic Rendering** | Always show fresh availability    |
-| Account / Guest Area | **Dynamic Rendering** | User-specific, authenticated data |
-
----
-
-## Why This Approach Works
-
-This architecture provides:
-
-- **Excellent performance** through server-first rendering
-- **Minimal JavaScript** sent to the browser
-- **Secure data access** with no exposed credentials
-- **Scalability** as features and complexity grow
-- **Clean separation of concerns** between UI, data, and interactivity
-
-By defining these decisions upfront, the project avoids common architectural pitfalls and sets a strong foundation for building a real-world Next.js application.
-
----
-
-## Organizing the Project Structure
-
-As a Next.js application grows, **project organization becomes critical** for maintainability, scalability, and team collaboration. This section focuses on transitioning from the default scaffold into a **clean, professional structure**, with special emphasis on **component organization**.
-
----
-
-## Common Component Organization Strategies
-
-There is no single “correct” way to organize React components, but several patterns are commonly used in production projects:
-
-### 1️⃣ Single Global Components Folder
-
-All components live in one top-level `components` directory.
-
-**Pros**
-
-- Simple and easy to understand
-- Good for small projects
-
-**Cons**
-
-- Quickly becomes cluttered
-- Hard to reason about ownership and responsibility as the app grows
-
----
-
-### 2️⃣ Route-Based Component Folders
-
-Each route has its own local `components` folder (e.g. `app/cabins/components`).
-
-**Pros**
-
-- Components live close to where they are used
-- Clear ownership per route
-
-**Cons**
-
-- Sharing components across routes becomes awkward
-- Can lead to duplication
-
----
-
-### 3️⃣ Atomic Design
-
-Components are grouped by abstraction level (atoms, molecules, organisms, templates).
-
-**Pros**
-
-- Highly systematic
-- Works well in large design systems
-
-**Cons**
-
-- Adds conceptual overhead
-- Often overkill for most product-focused apps
-
----
-
-## Chosen Strategy for *The Wild Oasis*
-
-For this project, the goal is **clarity, scalability, and simplicity**.
-
-### 🧼 Keep the `app` Folder Clean
-
-The `app` directory should contain **only**:
-
-- Routes
-- Next.js special files (`page.js`, `layout.js`, `loading.js`, etc.)
-
-It should **not** become a dumping ground for reusable UI logic.
-
----
-
-### 📁 Global `components` Folder
-
-All reusable React components live in a **top-level `components` directory**, outside the `app` folder.
-
-```txt
-components/
-  ui/
-  navigation/
-  cabins/
-  auth/
-```
-
-**Benefits**
-
-- Clear separation between routing and UI logic
-- Easy to reuse components across multiple routes
-- Scales well as features grow
-
----
-
-### 🗂️ Internal Categorization
-
-Inside `components`, related components are grouped logically:
-
-- `ui/` → Generic, reusable UI primitives (buttons, spinners, badges)
-- `navigation/` → Header, nav links, menus
-- `cabins/` → Cabin-related components
-- `auth/` → Authentication and user-related UI
-
-This structure reflects **domain-driven design** rather than file-type grouping.
-
----
-
-## Using Path Aliases
-
-To avoid deeply nested relative imports like:
-
-```js
-import Button from "../../../components/ui/Button";
-```
-
-Next.js supports **path aliases**.
-
-### The `@` Alias
-
-By default, the `@` alias points to the project root (or `src/` if used).
-
-This enables clean, predictable imports:
-
-```js
-import Button from "@/components/ui/Button";
-import Navigation from "@/components/navigation/Navigation";
-```
-
-**Advantages**
-
-- Readable imports
-- No dependency on folder depth
-- Easier refactoring
-
----
-
-## Cleaning Up the Initial Project
-
-Before building real features, the initial scaffold must be cleaned.
-
-### 🧹 Standardize Page Components
-
-- Each `page.js` exports a default component named `Page`
-- Remove placeholder text like `Hello Next!`
-
-```js
-export default function Page() {
-  return <h1>Cabins</h1>;
-}
-```
-
----
-
-### 🗑️ Remove Boilerplate & Experiments
-
-- Delete unused files from the learning phase
-- Remove experimental code
-- Ensure the project reflects **intentional structure**, not tutorials
-
----
-
-## Why This Matters
-
-This organization:
-
-- Reduces cognitive load
-- Encourages reuse
-- Keeps routing and UI concerns separate
-- Matches how professional Next.js teams structure projects
-
-With a clean foundation in place, the project is now ready to scale into real-world features like authentication, reservations, and complex data fetching.
-
----
-
-## Styling with Tailwind CSS
-
-**Tailwind CSS** is a modern, utility-first CSS framework that integrates seamlessly with Next.js. Since Tailwind was selected during the initial `create-next-app` setup, the project comes fully configured out of the box.
-
-In **The Wild Oasis** customer website, Tailwind is used to build a clean, modern UI while keeping styling tightly coupled to components.
-
----
-
-## Core Tailwind Integration in Next.js
-
-When Tailwind is enabled during project creation, Next.js automatically sets up the required tooling:
-
-### `tailwind.config.js`
-
-- Central configuration for Tailwind
-- Used to customize:
-
-  - Colors
-  - Fonts
-  - Spacing
-  - Breakpoints
-- Can be extended later for branding and design tokens
-
----
-
-### `postcss.config.js`
-
-- Configures PostCSS to process Tailwind at build time
-- Enables features like:
-
-  - Utility generation
-  - Vendor prefixing
-  - Tree-shaking unused styles
-
----
-
-### `globals.css`
-
-- Global stylesheet imported in the root layout
-- Includes Tailwind’s core directives:
-
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-This makes all Tailwind utility classes available throughout the application.
-
----
-
-## Styling Philosophy for This Project
-
-Although Tailwind is the primary styling solution, **this section of the course prioritizes Next.js architecture and logic over manual CSS authoring**.
-
-### Pre-Written Styles
-
-- Most Tailwind class strings are provided
-- Reduces cognitive load
-- Keeps focus on:
-
-  - Server Components
-  - Data fetching
-  - Routing
-  - Authentication flows
-
----
-
-### Tailwind vs Styled Components
-
-- The internal management app used **styled-components**
-- The customer-facing site uses **Tailwind CSS**, reflecting current industry trends
-- Tailwind is increasingly preferred for:
-
-  - Full-stack React apps
-  - Server Components
-  - Performance-sensitive UIs
-
----
-
-## Why Tailwind Works Well with Next.js
-
-Tailwind and Next.js complement each other exceptionally well:
-
-### ⚡ Performance
-
-- Tailwind generates **only the CSS that is actually used**
-- Results in smaller CSS bundles and faster page loads
-
----
-
-### 🧠 Developer Experience
-
-- Styles live directly alongside markup
-- No context switching between CSS files and components
-- Fits naturally with the component-driven mindset of React and Next.js
-
----
-
-### 📱 Responsive Design
-
-- Mobile-first by default
-- Built-in responsive modifiers (`sm:`, `md:`, `lg:`)
-- Makes it easy to ensure the Wild Oasis website looks great on all screen sizes
-
----
-
-## Summary
-
-Using Tailwind CSS in this project provides:
-
-- A modern, scalable styling approach
-- Excellent performance characteristics
-- A workflow that aligns perfectly with Next.js Server Components
-
-With styling infrastructure in place, the focus can now shift fully toward **building real features**, **fetching data**, and **creating interactive user experiences**.
-
----
-
-## Metadata & Favicon in Next.js (App Router)
-
-Next.js provides a **built-in, file-based convention** for handling metadata and favicons, improving **SEO** and **UX** with minimal configuration.
-
----
-
-## 1. Adding Page Metadata
-
-Metadata is defined by exporting a special constant from a `layout.js` or `page.js` file.
-
-### Metadata Basics
-
-- You must export a constant named **`metadata`**
-- It must be an **object**
-- Supported in both `layout.js` and `page.js`
-
-```js
-export const metadata = { ... };
-```
-
-### Common Static Metadata Fields
-
-- **`title`**
-
-  - Appears in the browser tab
-  - Used as the clickable title in search results
-- **`description`**
-
-  - Used by search engines as the page summary
-
-```js
-export const metadata = {
-  title: "Cabins",
-  description: "Explore our luxury cabins",
-};
-```
-
----
-
-## 2. Metadata Title Templates
-
-Next.js allows defining a **global title template** in the root layout.
-
-### Why Use Templates?
-
-- Avoid repetition
-- Enforce consistent branding
-- Child pages only define their unique title segment
-
-### Root Layout Example
-
-```js
-// app/layout.js
-export const metadata = {
-  title: {
-    template: "%s | The Wild Oasis",
-    default: "Welcome | The Wild Oasis",
-  },
-  description:
-    "Luxurious cabin hotel located in the heart of the Italian Dolomites.",
-};
-```
-
-### Child Page Example
-
-```js
-// app/cabins/page.js
-export const metadata = {
-  title: "Cabins",
-};
-```
-
-**Final browser tab title:**
-
-```
-Cabins | The Wild Oasis
-```
-
----
-
-## 3. Dynamic Metadata (Overview)
-
-For pages that depend on dynamic data (e.g., fetching cabin info):
-
-- Use **`generateMetadata()`**
-- Runs on the server
-- Can fetch data before setting metadata
-
-> ⚠️ Not covered in this lecture, but fully supported by Next.js.
-
----
-
-## 4. Adding a Favicon
-
-Next.js 14 uses **automatic file detection** for favicons.
-
-### How It Works
-
-- Place an image file in the **root of the `app/` folder**
-- Supported names:
-
-  - `icon.png`
-  - `favicon.ico`
-  - `icon.jpg`
-
-```txt
-app/
- ├─ icon.png
- ├─ layout.js
- └─ page.js
-```
-
-### Key Advantages
-
-- No `<link rel="icon">` needed
-- Next.js auto-generates `<head>` tags
-- Works across all routes automatically
-
-### Best Practice
-
-- Use **PNG**
-- Prefer **transparent backgrounds**
-- Size: `32×32` or `64×64`
-
----
-
-## Summary
-
-- Metadata is handled via exported `metadata` objects
-- Title templates ensure consistent branding
-- Favicons are auto-detected via file conventions
-- No manual `<head>` manipulation required
-
-This approach aligns perfectly with **Next.js server-first architecture** and keeps your app **SEO-friendly and maintainable**.
-
----
-
-## Font Optimization in Next.js (App Router)
-
-Next.js includes a **built-in font optimization system** that ensures fonts load efficiently, prevent layout shifts, and improve overall performance.
-
-This is handled through the **`next/font`** module.
-
----
-
-## 1. Performance Benefits of `next/font`
-
-### Zero Layout Shift (CLS Prevention)
-
-- Next.js automatically applies **size-adjust** CSS properties
-- Fallback fonts occupy the **same visual space** as the custom font
-- Prevents text from “jumping” when the font loads
-
----
-
-### Automatic Self-Hosting
-
-- When using **Google Fonts**, Next.js:
-
-  - Downloads font files at build time
-  - Serves them from your own deployment
-- No runtime requests to Google’s CDN
-
----
-
-### Privacy & Speed
-
-- No external font requests
-- Faster first paint
-- Improved privacy (no third-party tracking)
-
----
-
-## 2. Using Google Fonts with `next/font`
-
-Fonts are imported from:
-
-```js
-import { Inter } from "next/font/google";
-```
-
-### Font Configuration Options
-
-```js
-const inter = Inter({
-  subsets: ["latin"],   // Required
-  display: "swap",      // Recommended
-  weight: ["400", "600"] // Required for non-variable fonts
-});
-```
-
-**Key options:**
-
-- **`subsets`**
-  Reduces bundle size by loading only required characters
-
-- **`weight`**
-  Required unless the font is variable
-
-- **`display: 'swap'`**
-  Ensures text is visible immediately using a fallback font
-
----
-
-## 3. Applying Fonts in the App Router
-
-Each font configuration returns an object containing a **`className`**.
-
-### Global Font (Recommended)
-
-Apply the font at the root layout level:
-
-```js
-// app/layout.js
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-});
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en" className={inter.className}>
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
-This applies the font across the entire application.
-
----
-
-### Component-Level Fonts
-
-You can configure multiple fonts and apply them selectively:
-
-```js
-<h1 className={playfair.className}>Luxury Cabins</h1>
-```
-
-Useful for headings, branding, or accent typography.
-
----
-
-## 4. Best Practices
-
-- Always use `next/font` instead of `<link>` tags
-- Define global fonts in `app/layout.js`
-- Limit subsets and weights to what you actually use
-- Prefer variable fonts when available
-
----
-
-## Summary
-
-- `next/font` eliminates layout shift and improves performance
-- Fonts are self-hosted and privacy-friendly
-- Configuration is declarative and type-safe
-- Integrates seamlessly with Next.js Server Components
-
----
-
-## Improving the Navigation
-
-The initial navigation was a simple list of unstyled links. To give the site a more professional, cohesive feel, the following improvements are implemented:
-
-- **Component migration:** replace the basic nav with the pre-styled `Navigation` component from the starter files.
-- **Tailwind styling:** use Tailwind utility classes so the links match the overall UI.
-- **Logo integration:** add a dedicated `Logo` component to the header to reinforce branding across all pages.
-
-## Completing the Root Layout
-
-The root layout (`app/layout.js`) is finalized as the structural foundation for the entire site:
-
-- **Header + main wrapper:** a `<header>` for `Logo` and `Navigation`, plus a `<main>` that wraps `{children}` for consistent spacing and alignment.
-- **Flexbox layout:** a `flex-col` structure so the header stays at the top and the main content fills the remaining vertical space.
-- **Background + overlay:** where needed, use a background image with an overlay to keep text readable over photography.
-
-## The Final Root Structure
-
-With these additions, the root layout provides a consistent shell for every route:
-
-1. **`<html>` / `<body>` tags:** the required top-level wrappers.
-2. **Global font:** the optimized Google Font (e.g. Inter) applied for consistent typography.
-3. **Shared header:** branding + navigation that persists across routes.
-4. **Dynamic content:** the `{children}` slot where route pages (Home, Cabins, About, Account) are rendered.
-
----
-
-## Image Optimization with `next/image`
-
-Image optimization is a major lever for real-world performance. Next.js ships a dedicated `Image` component (from `next/image`) that replaces the standard HTML `<img>` tag and provides strong defaults out of the box.
-
-### Key Benefits
-
-- **Size optimization:** automatically serves the right image size per device and can deliver modern formats like WebP or AVIF.
-- **Visual stability (CLS):** helps prevent layout shift while images load by reserving space up front.
-- **Faster page loads:** images are lazy-loaded by default (loaded only when they enter the viewport).
-- **On-the-fly compression:** images can be optimized on request, letting you control quality directly in code.
-
-### Implementation Strategies
-
-Next.js handles optimization differently depending on where the image lives:
-
-#### 1) Static local images
-
-For images stored in the repo, you import the file directly.
-
-- **Automatic dimensions:** Next.js can infer `width` and `height` for imported files to prevent layout shifts.
-- **Blur placeholders:** add `placeholder="blur"` to show a low-res preview while the full image loads.
-
-#### 2) Remote images
-
-For images hosted externally (Supabase, S3, etc.), you pass a URL.
-
-- **Manual dimensions:** provide `width` and `height` (or use `fill`) since Next.js can’t inspect the remote asset at build time.
-- **Security configuration:** explicitly allow the remote domain in `next.config.js`.
-
-### Usage Example: Background Images
-
-To create a responsive background image that covers a container, use `fill` plus CSS:
-
-```javascript
-import Image from "next/image";
-import bg from "@/public/bg.png";
-
-export default function Home() {
-  return (
-    <div className="relative h-screen">
-      <Image 
-        src={bg} 
-        fill 
-        className="object-cover object-top" 
-        placeholder="blur"
-        quality={80} // Adjust compression quality (1-100)
-        alt="Background image of a cabin" 
-      />
-    </div>
-  );
-}
-
-```
-
-### Performance Impact
-
-The component can drastically reduce file sizes. For instance, a high-quality original image can be optimized and compressed by Next.js down to a much smaller size (e.g., from several hundred kilobytes to under 10 KB) without noticeable loss in quality for the user.
-
----
-
-## Building the Homepage
-
-The homepage for **The Wild Oasis** turns the initial placeholder into a focused, high-performance landing page using Next.js primitives and Tailwind CSS.
-
-### Structural Overview
-
-The homepage lives at `app/page.js`. It’s the first entry point for most visitors, combining a full-bleed background image with a clear call-to-action.
-
-### Key Components
-
-- **Main container:** the page content is wrapped in a `<main>` with spacing utilities (e.g. `mt-24`) so it sits comfortably beneath the header.
-- **Background image:** a full-screen background is rendered via Next.js `Image` (`next/image`) and positioned as a fixed layer.
-- **Scaling & layout:** `object-cover` / `object-top` keep the image responsive while preserving the focal point.
-- **Performance tweaks:** `quality={80}` helps reduce bandwidth, and `placeholder="blur"` provides a smooth loading transition.
-- **Hero content:** a prominent `<h1>` and a single CTA keep the page scannable and goal-driven.
-- **Call to action:** a `Link` routes users to `/cabins` with SPA navigation.
-
-### Performance Benefits
-
-Using `next/image` ensures the background is served in optimized formats and sizes, improving perceived speed and supporting strong **Largest Contentful Paint (LCP)**—especially on mobile and slower connections.
-
----
-
-## About & Cabins Pages
-
-Building the **About** page and the **Cabins overview** page focuses on two things: server-first rendering for content, and responsive images that stay fast and visually stable.
-
-### Cabins Overview Page (`app/cabins/page.js`)
-
-The cabins page is a Server Component by default, which makes it a natural place to fetch cabin data on the server before the UI is rendered.
-
-- **Server-side data:** fetch data directly in the component (no client hooks needed).
-- **Page metadata:** exports a `metadata` object (e.g. `title: "Cabins"`) so the browser tab title stays consistent.
-
-### About Page (`app/about/page.js`) and Responsive Images
-
-The About page demonstrates two common `next/image` patterns—static imports and responsive “fill” layouts.
-
-- **Static imports:** importing an image file lets Next.js infer image dimensions automatically, which works well with `placeholder="blur"`.
-- **`fill` for responsive layout:** when an image should fill a container, use `fill`.
-- **Container requirements:** a `fill` image needs a parent with a non-static position (typically `relative`) and a defined size (e.g. via `aspect-square`, explicit height, etc.).
-- **Styling:** `object-cover` keeps the image from stretching while preserving its aspect ratio.
-
-### Metadata Templates in Practice
-
-The root layout defines a title template so every page title follows the same branding.
-
-- **Template:** configured in `app/layout.js` as `%s - tourmate`.
-- **Child pages:** when a page exports `metadata.title = "About"`, Next.js renders the final title as `About - tourmate`.
-
----
-
-## Nested Routing (App Router)
-
-In the App Router, **nested routes** come from nesting folders inside `app/`. Each folder becomes a **URL segment**, and a route becomes reachable only when the segment contains a `page.js`.
-
-### Core Concepts
-
-- **Segments:** each part of a URL path (e.g. `/account`, `/cabins`) is a segment.
-- **File-system hierarchy:** to create `/account/profile`, create `app/account/profile/page.js`.
-- **`page.js` is the entry point:** a segment is not a public route unless it has a `page.js` exporting a default component.
-
-### Example: Account Area Structure (Illustrative)
-
-If you later expand the guest area under `/account`, you might structure it like this:
-
-| URL path | Folder path | Purpose |
-| --- | --- | --- |
-| `/account` | `app/account/page.js` | Main dashboard for the logged-in guest |
-| `/account/profile` | `app/account/profile/page.js` | Update guest profile information |
-| `/account/reservations` | `app/account/reservations/page.js` | View and manage reservations |
-
-### Why This Scales Well
-
-- **Automatic organization:** related pages stay grouped by folder.
-- **Scoped shared UI:** add a `layout.js` inside `app/account/` to share UI (e.g. a sidebar) across all `/account/*` routes.
-- **Predictable navigation:** the URL maps directly to the folder path, making pages easy to locate in the codebase.
-
----
-
-## Nested Layouts
-
-Nested layouts let you apply **section-specific UI** to a route segment while still inheriting the global root layout. You create one by adding a `layout.js` inside a subfolder of `app/`.
-
-### Why Nested Layouts Are Powerful
-
-- **Persistence:** like the root layout, a nested layout stays mounted while you navigate between sibling routes in that segment (great for sidebars or tabs that should keep state).
-- **Automatic hierarchy:** Next.js nests layouts for you. For example, `/account/profile` renders inside `app/account/layout.js`, which itself renders inside `app/layout.js`.
-- **Shared UI by section:** ideal for dashboards, filters, and navigation that should appear only within a specific area of the app.
-
-### Implementation in This Project
-
-This repo uses a nested layout for the account area:
-
-- **Location:** `app/account/layout.js`
-- **Structure:** renders a `SideNavigation` component alongside `{children}`.
-- **Result:** `/account/*` pages get the sidebar automatically, while public routes like `/cabins` and `/about` keep the simpler layout.
-
-### Developer Benefits
-
-- **Cleaner architecture:** global layout stays truly global; section UI lives with the section.
-- **Easy to reason about:** the folder structure tells you exactly which layout wraps a page.
-- **Localized data loading:** layouts can fetch their own data in the App Router, keeping logic close to where it’s used.
