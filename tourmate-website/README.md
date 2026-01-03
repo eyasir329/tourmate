@@ -420,3 +420,31 @@ These are the core patterns used throughout the implementation:
 1. **Service integration**: Cabin queries are centralized in a reusable `getCabins` helper in the data service layer.
 2. **Defensive UI**: Empty or missing data states are handled gracefully to avoid broken layouts.
 3. **Client/server boundary**: Data fetching and rendering stay server-side, while Client Components are reserved for interactive features when needed.
+
+---
+
+In Next.js, **streaming** lets the server send a page in **chunks** as they become ready. Instead of waiting for every data request to finish, the user can start seeing (and often interacting with) the page immediately—while slower sections continue loading in the background.
+
+### The `loading.js` Convention (Route-Level Streaming)
+
+`loading.js` is a built-in Next.js convention that enables streaming at the **route segment** level:
+
+- **Automatic Suspense boundary**: adding a `loading.js` file causes Next.js to wrap the corresponding `page.js` in a Suspense boundary automatically.
+- **Instant loading UI**: the UI exported from `loading.js` (spinner, skeleton, etc.) is sent to the client immediately on navigation.
+- **Progressive rendering**: while “heavy” server work (like database queries) runs, the route can still display stable UI such as layouts, headers, and navigation.
+
+### Global vs Route-Specific Loading
+
+You can control where loading indicators appear:
+
+- **Global loading**: `app/loading.js` applies to the entire app and can be used as a site-wide fallback.
+- **Route-specific loading**: `app/cabins/loading.js` applies only to the `/cabins` route segment, giving you a more tailored loading experience.
+- **Nested precedence**: when both exist, the most specific `loading.js` wins for its segment—so `/cabins` can show a cabin-specific loader rather than a generic global one.
+
+### Why “Selective” Streaming Matters
+
+A key insight in modern Next.js is that not everything on a page depends on data:
+
+- The **heading** and **intro text** can render immediately because they don’t require a database query.
+- The **cabin list** is the data-heavy part that depends on Supabase.
+- With streaming, users see the page structure right away, and the loader only occupies the space where the cabin results will appear—making the app feel faster and more responsive.
