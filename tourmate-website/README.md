@@ -232,16 +232,16 @@ The primary goal of this section is to deliver data to users **as fast as possib
 
 Learn how to stream UI incrementally so users see meaningful content immediately:
 
-* **Route-level streaming** using the `loading.js` convention
-* **Component-level streaming** with **React Suspense**
-* Progressive rendering of data-heavy sections while layouts render instantly
+- **Route-level streaming** using the `loading.js` convention
+- **Component-level streaming** with **React Suspense**
+- Progressive rendering of data-heavy sections while layouts render instantly
 
 ### 2. Rendering Strategies
 
 Understand when to use:
 
-* **Static Rendering** – pre-rendered at build time or cached
-* **Dynamic Rendering** – rendered on every request
+- **Static Rendering** – pre-rendered at build time or cached
+- **Dynamic Rendering** – rendered on every request
 
 You will establish clear criteria for choosing the correct strategy per route.
 
@@ -249,9 +249,9 @@ You will establish clear criteria for choosing the correct strategy per route.
 
 Leverage Next.js caching layers to:
 
-* Avoid redundant database queries
-* Reduce server load
-* Improve Time to First Byte (TTFB)
+- Avoid redundant database queries
+- Reduce server load
+- Improve Time to First Byte (TTFB)
 
 ---
 
@@ -259,9 +259,9 @@ Leverage Next.js caching layers to:
 
 ### Data Fetching (Server Components)
 
-* Fetch data directly inside **Server Components**
-* Secure access to the database without exposing credentials
-* No need for an intermediate REST or API route
+- Fetch data directly inside **Server Components**
+- Secure access to the database without exposing credentials
+- No need for an intermediate REST or API route
 
 ```js
 // app/cabins/page.js
@@ -279,9 +279,9 @@ export default async function Page() {
 
 Next.js provides automatic and configurable caching:
 
-* **Request Memoization** – deduplicates identical fetches
-* **Data Cache** – persists data between requests
-* **Full Route Cache** – caches rendered output
+- **Request Memoization** – deduplicates identical fetches
+- **Data Cache** – persists data between requests
+- **Full Route Cache** – caches rendered output
 
 ```js
 fetch(url, { cache: "force-cache" }); // static
@@ -300,8 +300,8 @@ Break pages into chunks so users don’t wait for all data to load:
 </Suspense>
 ```
 
-* Layout renders immediately
-* Data-heavy components load in parallel
+- Layout renders immediately
+- Data-heavy components load in parallel
 
 ---
 
@@ -336,9 +336,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 ### Direct Server Access
 
-* Server Components run **only on the server**
-* Database credentials are never sent to the browser
-* Faster and more secure than client-side fetching
+- Server Components run **only on the server**
+- Database credentials are never sent to the browser
+- Faster and more secure than client-side fetching
 
 ### Data Service Layer
 
@@ -355,9 +355,9 @@ export async function getCabins() {
 
 ### Shared with Management App
 
-* Same Supabase project
-* Same query logic
-* Guaranteed data consistency between admin dashboard and public website
+- Same Supabase project
+- Same query logic
+- Guaranteed data consistency between admin dashboard and public website
 
 ---
 
@@ -365,15 +365,15 @@ export async function getCabins() {
 
 By connecting the website to the **existing Supabase project**:
 
-* No schema duplication
-* No redundant API logic
-* Immediate access to live cabin and booking data
+- No schema duplication
+- No redundant API logic
+- Immediate access to live cabin and booking data
 
 This allows the developer to focus on:
 
-* UI composition
-* Streaming strategy
-* Caching and performance
+- UI composition
+- Streaming strategy
+- Caching and performance
 
 ---
 
@@ -381,7 +381,42 @@ This allows the developer to focus on:
 
 After completing this section, you will be able to:
 
-* Choose between **static vs dynamic rendering** confidently
-* Stream content effectively using **Suspense** and `loading.js`
-* Optimize data delivery with **Next.js caching**
-* Build fast, scalable, server-first routes in Next.js App Router
+- Choose between **static vs dynamic rendering** confidently
+- Stream content effectively using **Suspense** and `loading.js`
+- Optimize data delivery with **Next.js caching**
+- Build fast, scalable, server-first routes in Next.js App Router
+
+---
+
+Building the cabin list for **The Wild Oasis** is a great fit for the Next.js App Router: we fetch cabin data on the server and render a clean, responsive overview—fast, secure, and SEO-friendly by default.
+
+### Data Fetching and Rendering
+
+In this project, the cabins overview is a **Server Component**, which means the data is loaded during server rendering:
+
+- **Server-side fetching**: Cabins are queried on the server through a dedicated data service, so the initial page load does not need `useEffect` or `useState`.
+- **Async/await flow**: The route component is an `async` function, allowing the UI to wait for the database query before rendering the list.
+- **Loading states**: If a `loading.js` file exists for the route, Next.js can show a loading UI while data is being fetched.
+
+### Component Structure
+
+The cabins UI is split into focused parts to keep the codebase tidy and reusable:
+
+- **CabinPage**: The route component (`app/cabins/page.js`) is responsible for fetching cabin data and orchestrating the page layout.
+- **CabinCard**: A presentational component for a single cabin—typically showing the image, name, capacity, and price.
+
+### Display and Optimization
+
+The cabins overview is designed to be both fast and visually polished:
+
+- **Image optimization**: Cabin images are rendered with Next.js `<Image />`, which handles efficient sizing and modern image delivery.
+- **Tailwind styling**: The list is laid out with Tailwind CSS utilities for a responsive grid or list presentation.
+- **Navigation links**: Each cabin entry uses `next/link` so users can navigate to a cabin detail page with smooth, client-side routing.
+
+### Key Code Patterns
+
+These are the core patterns used throughout the implementation:
+
+1. **Service integration**: Cabin queries are centralized in a reusable `getCabins` helper in the data service layer.
+2. **Defensive UI**: Empty or missing data states are handled gracefully to avoid broken layouts.
+3. **Client/server boundary**: Data fetching and rendering stay server-side, while Client Components are reserved for interactive features when needed.
