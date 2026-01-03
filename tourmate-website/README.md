@@ -221,3 +221,167 @@ App Router projects have many `page.js` files. VS Code Custom Labels can show th
 ```bash
 npm install next@latest react@latest react-dom@latest eslint-config-next@latest
 ```
+
+---
+
+## Key Section Objectives
+
+The primary goal of this section is to deliver data to users **as fast as possible** by fully leveraging the **Next.js App Router** and its server-first architecture.
+
+### 1. Content Streaming
+
+Learn how to stream UI incrementally so users see meaningful content immediately:
+
+* **Route-level streaming** using the `loading.js` convention
+* **Component-level streaming** with **React Suspense**
+* Progressive rendering of data-heavy sections while layouts render instantly
+
+### 2. Rendering Strategies
+
+Understand when to use:
+
+* **Static Rendering** – pre-rendered at build time or cached
+* **Dynamic Rendering** – rendered on every request
+
+You will establish clear criteria for choosing the correct strategy per route.
+
+### 3. Performance Optimization
+
+Leverage Next.js caching layers to:
+
+* Avoid redundant database queries
+* Reduce server load
+* Improve Time to First Byte (TTFB)
+
+---
+
+## Core Techniques Covered
+
+### Data Fetching (Server Components)
+
+* Fetch data directly inside **Server Components**
+* Secure access to the database without exposing credentials
+* No need for an intermediate REST or API route
+
+```js
+// app/cabins/page.js
+import { getCabins } from "@/lib/data-service";
+
+export default async function Page() {
+  const cabins = await getCabins();
+  return <CabinList cabins={cabins} />;
+}
+```
+
+---
+
+### Caching
+
+Next.js provides automatic and configurable caching:
+
+* **Request Memoization** – deduplicates identical fetches
+* **Data Cache** – persists data between requests
+* **Full Route Cache** – caches rendered output
+
+```js
+fetch(url, { cache: "force-cache" }); // static
+fetch(url, { cache: "no-store" });    // dynamic
+```
+
+---
+
+### Streaming with Suspense
+
+Break pages into chunks so users don’t wait for all data to load:
+
+```jsx
+<Suspense fallback={<Spinner />}>
+  <CabinList />
+</Suspense>
+```
+
+* Layout renders immediately
+* Data-heavy components load in parallel
+
+---
+
+## Supabase Integration
+
+To integrate hotel data into **The Wild Oasis** website, the project uses **Supabase** as a backend connected to a PostgreSQL database.
+
+### Supabase Client Setup
+
+```js
+// lib/supabase.js
+import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+```
+
+### Environment Variables
+
+Stored securely in `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+---
+
+## Data Access Architecture
+
+### Direct Server Access
+
+* Server Components run **only on the server**
+* Database credentials are never sent to the browser
+* Faster and more secure than client-side fetching
+
+### Data Service Layer
+
+All database logic is encapsulated in reusable services:
+
+```js
+// lib/data-service.js
+export async function getCabins() {
+  const { data, error } = await supabase.from("cabins").select("*");
+  if (error) throw new Error(error.message);
+  return data;
+}
+```
+
+### Shared with Management App
+
+* Same Supabase project
+* Same query logic
+* Guaranteed data consistency between admin dashboard and public website
+
+---
+
+## Implementation Strategy
+
+By connecting the website to the **existing Supabase project**:
+
+* No schema duplication
+* No redundant API logic
+* Immediate access to live cabin and booking data
+
+This allows the developer to focus on:
+
+* UI composition
+* Streaming strategy
+* Caching and performance
+
+---
+
+## Outcome
+
+After completing this section, you will be able to:
+
+* Choose between **static vs dynamic rendering** confidently
+* Stream content effectively using **Suspense** and `loading.js`
+* Optimize data delivery with **Next.js caching**
+* Build fast, scalable, server-first routes in Next.js App Router
