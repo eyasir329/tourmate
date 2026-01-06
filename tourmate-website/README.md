@@ -721,3 +721,151 @@ Use Suspense if:
 > **`loading.js` blocks the route — Suspense streams the page.**
 
 ---
+
+# Dynamic Route Segments in Next.js (App Router)
+
+## 1. The Core Idea
+
+### The Problem
+
+When building individual item pages (e.g., a specific cabin), URLs must include a unique identifier:
+
+```
+/cabins/91
+/cabins/89
+```
+
+Manually creating folders for every ID is impossible.
+
+### The Solution
+
+**Dynamic Route Segments** let Next.js match parts of the URL at runtime using placeholders.
+
+---
+
+## 2. Folder & File Structure
+
+Dynamic routes are created using **square brackets**.
+
+```
+app/
+└── cabins/
+    └── [cabinId]/
+        └── page.jsx
+```
+
+* `[cabinId]` becomes a **variable segment**
+* `page.jsx` renders **all matching routes**
+
+---
+
+## 3. Accessing the Dynamic Parameter
+
+Every dynamic route page automatically receives a `params` object.
+
+```jsx
+export default function Page({ params }) {
+  console.log(params.cabinId);
+}
+```
+
+### Key Rules
+
+* The key name **must match the folder name**
+* `[cabinId]` → `params.cabinId`
+* Value is always a **string**
+
+---
+
+## 4. Fetching Data for the Dynamic Page
+
+Dynamic pages typically fetch data based on the URL parameter.
+
+```jsx
+import { getCabin } from "@/lib/data-service";
+
+export default async function CabinPage({ params }) {
+  const cabin = await getCabin(params.cabinId);
+
+  return (
+    <section>
+      <h1>{cabin.name}</h1>
+      <p>{cabin.description}</p>
+    </section>
+  );
+}
+```
+
+### Important Notes
+
+* Page must be an **async Server Component**
+* Data fetching happens **during rendering**
+* No `useEffect` or client-side fetching needed
+
+---
+
+## 5. Loading States for Dynamic Routes
+
+### Default Behavior
+
+If you already have:
+
+```
+app/cabins/loading.jsx
+```
+
+It will automatically apply to:
+
+* `/cabins`
+* `/cabins/91`
+* `/cabins/any-id`
+
+### Override for Dynamic Route
+
+Add a specific loader:
+
+```
+app/cabins/[cabinId]/loading.jsx
+```
+
+This loader **only affects the dynamic page**, not the parent route.
+
+---
+
+## 6. Images in Dynamic Pages (Common Pattern)
+
+Dynamic content often has varying image sizes. Best practice:
+
+```jsx
+<div className="relative h-[400px]">
+  <Image
+    src={cabin.image}
+    alt={cabin.name}
+    fill
+    className="object-cover"
+  />
+</div>
+```
+
+### Why This Works
+
+* `relative` → required for `fill`
+* `fill` → responsive sizing
+* `object-cover` → preserves aspect ratio
+
+---
+
+## 7. Mental Model
+
+> **Dynamic route folders turn URL segments into function arguments.**
+
+---
+
+## 8. Common Mistakes to Avoid
+
+❌ Expecting `params` in client components
+❌ Forgetting to make the page `async`
+❌ Mismatching folder name and `params` key
+❌ Parsing `params.cabinId` as a number without conversion
+
+---
