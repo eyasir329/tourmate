@@ -561,3 +561,163 @@ A key insight in modern Next.js is that not everything on a page depends on data
 > **Suspense hides UI instead of unmounting it, waits for async work, then reveals it again—state intact.**
 
 ---
+
+# Streaming UI with React Suspense (Next.js App Router)
+
+## 1. The Problem: Route-Level Blocking (`loading.js`)
+
+Using a `loading.js` file creates a **route-level loading state**.
+
+### What happens
+
+* The **entire page** is blocked until *all* required data finishes loading.
+* Static UI (headings, intro text, layout) is hidden behind the spinner.
+
+### Result
+
+* Users see a **full-page loader**
+* No progressive rendering
+* Poor perceived performance
+
+---
+
+## 2. The Solution: Granular Streaming with Suspense
+
+React Suspense enables **partial UI streaming**.
+
+### Core Idea
+
+* Render **static UI immediately**
+* Stream in **data-dependent components** independently
+
+### Outcome
+
+* Page shell appears instantly
+* Only the slow data section shows a loading indicator
+* Dramatically better UX
+
+---
+
+## 3. Implementation Strategy
+
+### Step A — Isolate the Async Work
+
+You **cannot** achieve streaming by wrapping the entire page in Suspense.
+You must **extract the async logic**.
+
+#### 1️⃣ Create a Data Component
+
+Move both:
+
+* data fetching
+* rendering logic
+
+into a new component.
+
+```jsx
+// app/cabins/CabinList.jsx
+export default async function CabinList() {
+  const cabins = await fetchCabins();
+
+  return (
+    <ul>
+      {cabins.map(cabin => (
+        <Cabin key={cabin.id} cabin={cabin} />
+      ))}
+    </ul>
+  );
+}
+```
+
+> This is a **Server Component** and must be `async`.
+
+---
+
+#### 2️⃣ Clean the Page Component
+
+The page itself should:
+
+* NOT be async
+* Render only static content + the async child
+
+```jsx
+// app/cabins/page.jsx
+import CabinList from "./CabinList";
+import { Suspense } from "react";
+import Spinner from "@/components/Spinner";
+
+export default function CabinsPage() {
+  return (
+    <>
+      <h1>Our Cabins</h1>
+      <p>Choose from our luxury cabins.</p>
+
+      <Suspense fallback={<Spinner />}>
+        <CabinList />
+      </Suspense>
+    </>
+  );
+}
+```
+
+---
+
+### Step B — Apply the Suspense Boundary
+
+#### Key Rules
+
+✔ Suspense **must wrap the async component**
+✔ Suspense must be **outside** the component doing async work
+✔ `fallback` must be a **React element**, not a function
+
+❌ This will NOT work:
+
+```jsx
+async function Page() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      ...
+    </Suspense>
+  );
+}
+```
+
+---
+
+## 4. How Streaming Works at Runtime
+
+1. Static JSX renders immediately
+2. React encounters `<CabinList />`
+3. Component suspends (throws a Promise)
+4. Suspense renders `<Spinner />`
+5. Data resolves
+6. CabinList streams in and replaces fallback
+
+---
+
+## 5. Best Practices
+
+### Data Fetching
+
+* Keep data fetching **as close as possible** to the component that consumes it
+* Avoid lifting async logic to the page unless necessary
+
+### When to Use `loading.js`
+
+Use `loading.js` if:
+
+* The page is **entirely dynamic**
+* There is no meaningful static UI to show early
+
+Use Suspense if:
+
+* Static + dynamic UI are mixed
+* You want progressive rendering
+
+---
+
+## 6. One-Line Mental Model
+
+> **`loading.js` blocks the route — Suspense streams the page.**
+
+---
