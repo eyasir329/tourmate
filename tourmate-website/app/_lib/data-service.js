@@ -39,7 +39,7 @@ export async function getCabinPrice(id) {
 }
 
 export const getCabins = async function () {
-  //noStore();
+  // noStore();
   const { data, error } = await supabase
     .from("cabins")
     .select("id, name, maxCapacity, regularPrice, discount, image")
@@ -52,7 +52,7 @@ export const getCabins = async function () {
     console.error(error);
     throw new Error("Cabins could not be loaded");
   }
-
+  // console.log("Cabins data fetched:", data);
   return data;
 };
 
