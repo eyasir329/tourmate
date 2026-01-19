@@ -1040,16 +1040,16 @@ export default function Error({ error, reset }) {
 
 ### ✅ Catches
 
-* Errors during **rendering**
-* Errors in **Server Components**
-* Errors in **data fetching during render**
-* Errors in **nested layouts and pages**
+- Errors during **rendering**
+- Errors in **Server Components**
+- Errors in **data fetching during render**
+- Errors in **nested layouts and pages**
 
 ### ❌ Does NOT Catch
 
-* Errors inside **event handlers**
-* Errors inside `useEffect`
-* Errors inside the **root layout (`app/layout.js`)**
+- Errors inside **event handlers**
+- Errors inside `useEffect`
+- Errors inside the **root layout (`app/layout.js`)**
 
 > React Error Boundaries only work during the render phase.
 
@@ -1098,9 +1098,9 @@ export default function GlobalError({ error, reset }) {
 
 Use this for:
 
-* Root-level data fetching failures
-* Theme/provider crashes
-* Auth/session initialization errors
+- Root-level data fetching failures
+- Theme/provider crashes
+- Auth/session initialization errors
 
 ---
 
@@ -1128,8 +1128,8 @@ Unlike runtime errors (handled by `error.js`), **404s are a routing concern**, a
 
 Replaces the default Next.js 404 screen with a **custom, user-friendly page** when:
 
-* A route does not exist
-* A `notFound()` call is triggered and no closer boundary exists
+- A route does not exist
+- A `notFound()` call is triggered and no closer boundary exists
 
 ---
 
@@ -1205,19 +1205,19 @@ export async function getCabin(id) {
 
 📌 Important:
 
-* Immediately **halts execution**
-* Does **not throw** a traditional error
-* Skips `error.js`
-* Renders the nearest `not-found.js`
+- Immediately **halts execution**
+- Does **not throw** a traditional error
+- Skips `error.js`
+- Renders the nearest `not-found.js`
 
 ---
 
 ### Common Use Cases
 
-* Invalid dynamic route IDs
-* Deleted resources
-* Unauthorized access masked as non-existent content
-* Empty database results
+- Invalid dynamic route IDs
+- Deleted resources
+- Unauthorized access masked as non-existent content
+- Empty database results
 
 ---
 
@@ -1260,8 +1260,8 @@ export default function CabinNotFound() {
 
 ### Behavior
 
-* `notFound()` inside `[cabinId]` → renders this page
-* Falls back to `app/not-found.js` if no closer match exists
+- `notFound()` inside `[cabinId]` → renders this page
+- Falls back to `app/not-found.js` if no closer match exists
 
 ---
 
@@ -1282,10 +1282,10 @@ export default function CabinNotFound() {
 
 ## 5. SEO & UX Benefits
 
-* Correct **HTTP 404 status**
-* Prevents indexing of invalid pages
-* Clean separation between crashes and missing content
-* Better analytics and monitoring
+- Correct **HTTP 404 status**
+- Prevents indexing of invalid pages
+- Clean separation between crashes and missing content
+- Better analytics and monitoring
 
 ---
 
@@ -1313,16 +1313,15 @@ app/
 
 ![h](https://i.ibb.co.com/1J9rn0bw/Screenshot-from-2026-01-20-00-35-49.png)
 
-
 ---
 
 ## 1. Core Concept: **Route-Based Rendering**
 
 In Next.js, rendering decisions are made **per route**, not per application.
 
-* Each route segment (`/products`, `/cart`, `/cabins/[id]`) is analyzed independently.
-* Next.js uses **React Server Components + react-dom/server** to render routes on the server.
-* A single app can contain **static**, **dynamic**, and **hybrid (ISR)** routes simultaneously.
+- Each route segment (`/products`, `/cart`, `/cabins/[id]`) is analyzed independently.
+- Next.js uses **React Server Components + react-dom/server** to render routes on the server.
+- A single app can contain **static**, **dynamic**, and **hybrid (ISR)** routes simultaneously.
 
 > Rendering strategy is inferred automatically unless explicitly overridden.
 
@@ -1344,28 +1343,28 @@ Build → HTML generated once → served from CDN
 
 ### Trigger
 
-* Happens during `next build`
-* Developer triggers rendering by building the app
+- Happens during `next build`
+- Developer triggers rendering by building the app
 
 ### Typical Use Cases
 
-* Landing pages
-* Marketing pages
-* Blog posts
-* Public product listings
-* Documentation
+- Landing pages
+- Marketing pages
+- Blog posts
+- Public product listings
+- Documentation
 
 ### Advantages
 
 #### 🚀 Performance
 
-* Zero server work at request time
-* Near-instant response
+- Zero server work at request time
+- Near-instant response
 
 #### 🌍 CDN Distribution
 
-* HTML, CSS, JS are cached globally
-* Served from the closest edge location
+- HTML, CSS, JS are cached globally
+- Served from the closest edge location
 
 ### Important Note
 
@@ -1387,22 +1386,22 @@ User request → Server renders HTML → Response
 
 ### Trigger
 
-* Rendering happens when the **user visits the page**
-* Server executes the component on every request
+- Rendering happens when the **user visits the page**
+- Server executes the component on every request
 
 ### Typical Use Cases
 
-* Personalized dashboards
-* Shopping carts
-* Authenticated user pages
-* Frequently changing data
-* Request-specific content
+- Personalized dashboards
+- Shopping carts
+- Authenticated user pages
+- Frequently changing data
+- Request-specific content
 
 ### Trade-Offs
 
-* Slower than static
-* Requires server execution
-* Cannot be fully cached at the CDN level
+- Slower than static
+- Requires server execution
+- Cannot be fully cached at the CDN level
 
 ---
 
@@ -1444,9 +1443,9 @@ export default function Page({ searchParams }) {
 
 Using:
 
-* `cookies()`
-* `headers()`
-* `draftMode()`
+- `cookies()`
+- `headers()`
+- `draftMode()`
 
 ```js
 import { cookies } from 'next/headers'
@@ -1484,9 +1483,9 @@ export const dynamic = 'force-dynamic'
 
 A globally distributed cache that:
 
-* Stores static HTML, CSS, JS, images
-* Serves content from the closest physical location
-* Reduces latency and server load
+- Stores static HTML, CSS, JS, images
+- Serves content from the closest physical location
+- Reduces latency and server load
 
 Static pages benefit the most from CDNs.
 
@@ -1496,9 +1495,9 @@ Static pages benefit the most from CDNs.
 
 A **request-scoped execution unit**:
 
-* Spins up when a request arrives
-* Executes server-side code
-* Shuts down afterward
+- Spins up when a request arrives
+- Executes server-side code
+- Shuts down afterward
 
 Dynamic routes often run as **serverless functions** on platforms like Vercel or AWS.
 
@@ -1508,15 +1507,15 @@ Dynamic routes often run as **serverless functions** on platforms like Vercel or
 
 Running server code:
 
-* On geographically distributed servers
-* Closer to users than traditional data centers
+- On geographically distributed servers
+- Closer to users than traditional data centers
 
 Used for:
 
-* Low-latency personalization
-* Auth checks
-* Middleware
-* Lightweight dynamic rendering
+- Low-latency personalization
+- Auth checks
+- Middleware
+- Lightweight dynamic rendering
 
 ---
 
@@ -1536,9 +1535,9 @@ Example:
 fetch(url, { next: { revalidate: 60 } })
 ```
 
-* Page is static
-* Automatically updated
-* No full rebuild required
+- Page is static
+- Automatically updated
+- No full rebuild required
 
 ---
 
@@ -1555,13 +1554,12 @@ fetch(url, { next: { revalidate: 60 } })
 
 ## Final Takeaway
 
-* **Static rendering is the default**
-* **Dynamic rendering is opt-in via usage**
-* Next.js chooses the safest, most correct strategy automatically
-* Performance comes from *how much work happens before the request*
+- **Static rendering is the default**
+- **Dynamic rendering is opt-in via usage**
+- Next.js chooses the safest, most correct strategy automatically
+- Performance comes from *how much work happens before the request*
 
 ---
-
 
 # How to Analyze Rendering Strategy in Next.js (Static vs Dynamic)
 
@@ -1569,9 +1567,9 @@ fetch(url, { next: { revalidate: 60 } })
 
 The **development server is misleading** because:
 
-* Everything behaves dynamically
-* Caching is disabled
-* Rendering strategies are not finalized
+- Everything behaves dynamically
+- Caching is disabled
+- Rendering strategies are not finalized
 
 ### Correct Way
 
@@ -1581,8 +1579,8 @@ npm run build
 
 This runs the **static analysis phase** where Next.js decides:
 
-* Which routes can be pre-rendered
-* Which must run at request time
+- Which routes can be pre-rendered
+- Which must run at request time
 
 ![h](https://i.ibb.co.com/35Xt7s1C/Screenshot-from-2026-01-20-01-03-32.png)
 
@@ -1606,14 +1604,14 @@ After the build completes, Next.js prints a route table with symbols:
 
 ### Observed Output
 
-* `/` → `○` Static
-* `/cabins` → `○` Static
-* `/cabins/[cabinId]` → `λ` Dynamic
+- `/` → `○` Static
+- `/cabins` → `○` Static
+- `/cabins/[cabinId]` → `λ` Dynamic
 
 This tells us:
 
-* Listing pages are pre-rendered
-* Individual cabin pages are rendered on-demand
+- Listing pages are pre-rendered
+- Individual cabin pages are rendered on-demand
 
 ---
 
@@ -1628,9 +1626,9 @@ A route **with `[cabinId]` is NOT automatically dynamic**.
 
 Next.js only switches to dynamic rendering if:
 
-* The page **reads request-specific data**, OR
-* The page **does not provide static parameters**, OR
-* The data fetching strategy disallows caching
+- The page **reads request-specific data**, OR
+- The page **does not provide static parameters**, OR
+- The data fetching strategy disallows caching
 
 ---
 
@@ -1638,9 +1636,9 @@ Next.js only switches to dynamic rendering if:
 
 In this app:
 
-* The page **accesses `params.cabinId`**
-* **No `generateStaticParams()`** is provided
-* Next.js cannot know which IDs exist at build time
+- The page **accesses `params.cabinId`**
+- **No `generateStaticParams()`** is provided
+- Next.js cannot know which IDs exist at build time
 
 ➡️ Therefore, it must render the page at request time
 ➡️ Result: `λ` (dynamic)
@@ -1665,8 +1663,8 @@ export async function generateStaticParams() {
 
 Now:
 
-* Each `/cabins/1`, `/cabins/2`, etc. is pre-rendered
-* Build output changes from `λ` → `○` or `●`
+- Each `/cabins/1`, `/cabins/2`, etc. is pre-rendered
+- Build output changes from `λ` → `○` or `●`
 
 ---
 
@@ -1697,9 +1695,164 @@ One **yes** → dynamic rendering.
 
 ## Final Takeaway
 
-* `npm run build` is the **only reliable way** to inspect rendering strategy
-* Build symbols reflect **actual production behavior**
-* Dynamic routes are **not inherently dynamic**
-* Static vs Dynamic is about **what data is needed and when**
+- `npm run build` is the **only reliable way** to inspect rendering strategy
+- Build symbols reflect **actual production behavior**
+- Dynamic routes are **not inherently dynamic**
+- Static vs Dynamic is about **what data is needed and when**
+
+---
+
+# Converting Dynamic Routes to Static with `generateStaticParams`
+
+## 1. The Goal: Pre-render Dynamic Segments
+
+Dynamic routes like:
+
+```txt
+/cabins/[cabinId]
+```
+
+default to **dynamic rendering** because Next.js cannot know which IDs exist at build time.
+
+### The Problem
+
+- Each request requires server execution
+- Slower response
+- Cannot fully leverage CDN caching
+
+### The Solution
+
+If the set of IDs is **finite and known**, you can **explicitly provide them** at build time.
+
+➡️ This allows Next.js to **pre-generate HTML for every ID**.
+
+---
+
+## 2. `generateStaticParams` (App Router Only)
+
+`generateStaticParams` tells Next.js:
+
+> “Here are all valid values for this dynamic segment.”
+
+### Where It Lives
+
+```txt
+app/cabins/[cabinId]/page.js
+```
+
+---
+
+## 3. Implementation Breakdown
+
+### Requirements
+
+1. Must be **exported**
+2. Must be **async**
+3. Must return an **array of objects**
+4. Object keys must **match the dynamic segment name**
+5. Param values must be **strings**
+
+---
+
+### Example Implementation
+
+```js
+export async function generateStaticParams() {
+  const cabins = await getCabins()
+
+  return cabins.map(cabin => ({
+    cabinId: String(cabin.id),
+  }))
+}
+```
+
+![h](https://i.ibb.co.com/21mLMHr7/Screenshot-from-2026-01-20-02-14-09.png)
+
+### Why This Works
+
+- Next.js calls this **at build time**
+- Each returned object becomes a static route:
+
+  - `/cabins/1`
+  - `/cabins/2`
+  - `/cabins/3`
+- The page is rendered once and cached forever (unless revalidated)
+
+---
+
+## 4. Build Output After Conversion
+
+Running:
+
+```bash
+npm run build
+```
+
+You’ll observe:
+
+### Before
+
+```txt
+/cabins/[cabinId]   λ   (Dynamic)
+```
+
+### After
+
+```txt
+/cabins/1           ○
+/cabins/2           ○
+/cabins/3           ○
+```
+
+✔ Route becomes **fully static**
+✔ HTML generated at build time
+✔ Served from CDN
+
+---
+
+## 5. Adding ISR (Optional but Powerful)
+
+Static doesn’t have to mean *stale forever*.
+
+```js
+fetch(url, { next: { revalidate: 60 } })
+```
+
+Now:
+
+- Pages are still static
+- Automatically updated every 60 seconds
+- Build symbol becomes: `●` (ISR)
+
+---
+
+## 6. Common Pitfalls (Avoid These)
+
+❌ Forgetting to return **strings**
+❌ Key name doesn’t match folder (`[cabinId]`)
+❌ Using `cookies()`, `headers()`, or `no-store`
+❌ Calling `generateStaticParams` in Client Components
+
+Any of these forces the route back to **dynamic**.
+
+---
+
+## 7. Mental Model
+
+| Question                         | Answer                     |
+| -------------------------------- | -------------------------- |
+| Are all IDs known at build time? | Use `generateStaticParams` |
+| Data updates occasionally?       | Add ISR                    |
+| Data is user-specific?           | Keep dynamic               |
+| Unknown IDs?                     | Dynamic + `notFound()`     |
+
+---
+
+## Final Takeaway
+
+- Dynamic routes are **not inherently dynamic**
+- `generateStaticParams` converts them to **static**
+- This unlocks **maximum performance**
+- CDN-served HTML with zero runtime cost
 
 ---
