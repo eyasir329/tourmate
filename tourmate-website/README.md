@@ -1304,3 +1304,261 @@ app/
 ```
 
 ---
+
+# Server-Side Rendering in Next.js
+
+![h](https://i.ibb.co.com/9HQWTDYH/Screenshot-from-2026-01-20-00-35-26.png)
+
+## Static vs Dynamic Rendering (App Router)
+
+![h](https://i.ibb.co.com/1J9rn0bw/Screenshot-from-2026-01-20-00-35-49.png)
+
+
+---
+
+## 1. Core Concept: **Route-Based Rendering**
+
+In Next.js, rendering decisions are made **per route**, not per application.
+
+* Each route segment (`/products`, `/cart`, `/cabins/[id]`) is analyzed independently.
+* Next.js uses **React Server Components + react-dom/server** to render routes on the server.
+* A single app can contain **static**, **dynamic**, and **hybrid (ISR)** routes simultaneously.
+
+> Rendering strategy is inferred automatically unless explicitly overridden.
+
+---
+
+## 2. The Two Main Rendering Strategies
+
+---
+
+## A. Static Rendering (Default Behavior)
+
+### Definition
+
+HTML is generated **at build time** and reused for all users.
+
+```txt
+Build → HTML generated once → served from CDN
+```
+
+### Trigger
+
+* Happens during `next build`
+* Developer triggers rendering by building the app
+
+### Typical Use Cases
+
+* Landing pages
+* Marketing pages
+* Blog posts
+* Public product listings
+* Documentation
+
+### Advantages
+
+#### 🚀 Performance
+
+* Zero server work at request time
+* Near-instant response
+
+#### 🌍 CDN Distribution
+
+* HTML, CSS, JS are cached globally
+* Served from the closest edge location
+
+### Important Note
+
+Static rendering **does not mean “no server”** — it means the server work happened **earlier**, at build time.
+
+---
+
+![h](https://i.ibb.co.com/SXMghf45/Screenshot-from-2026-01-20-00-36-15.png)
+
+## B. Dynamic Rendering
+
+### Definition
+
+HTML is generated **at request time**, per incoming request.
+
+```txt
+User request → Server renders HTML → Response
+```
+
+### Trigger
+
+* Rendering happens when the **user visits the page**
+* Server executes the component on every request
+
+### Typical Use Cases
+
+* Personalized dashboards
+* Shopping carts
+* Authenticated user pages
+* Frequently changing data
+* Request-specific content
+
+### Trade-Offs
+
+* Slower than static
+* Requires server execution
+* Cannot be fully cached at the CDN level
+
+---
+
+## 3. When Does Next.js Switch to Dynamic Rendering?
+
+Next.js **automatically opts out of static rendering** if it detects **request-specific behavior**.
+
+### Common Dynamic Triggers
+
+#### 1. Dynamic Route Parameters
+
+```txt
+/cabins/[id]
+```
+
+```js
+export default function Page({ params }) {
+  params.id // triggers dynamic rendering
+}
+```
+
+---
+
+#### 2. Search Params (Query Strings)
+
+```txt
+/search?sort=price
+```
+
+```js
+export default function Page({ searchParams }) {
+  searchParams.sort
+}
+```
+
+---
+
+#### 3. Request-Specific APIs
+
+Using:
+
+* `cookies()`
+* `headers()`
+* `draftMode()`
+
+```js
+import { cookies } from 'next/headers'
+```
+
+---
+
+#### 4. Uncached Data Fetching
+
+```js
+fetch(url, { cache: 'no-store' })
+```
+
+or:
+
+```js
+export const dynamic = 'force-dynamic'
+```
+
+---
+
+### Summary Rule
+
+> If a route depends on **who is requesting** or **when they request**, it must be dynamic.
+
+---
+
+## 4. Key Terminology (Correctly Framed)
+
+![h](https://i.ibb.co.com/DPFCy2nR/Screenshot-from-2026-01-20-00-36-37.png)
+
+---
+
+### CDN (Content Delivery Network)
+
+A globally distributed cache that:
+
+* Stores static HTML, CSS, JS, images
+* Serves content from the closest physical location
+* Reduces latency and server load
+
+Static pages benefit the most from CDNs.
+
+---
+
+### Serverless Function
+
+A **request-scoped execution unit**:
+
+* Spins up when a request arrives
+* Executes server-side code
+* Shuts down afterward
+
+Dynamic routes often run as **serverless functions** on platforms like Vercel or AWS.
+
+---
+
+### Edge Computing
+
+Running server code:
+
+* On geographically distributed servers
+* Closer to users than traditional data centers
+
+Used for:
+
+* Low-latency personalization
+* Auth checks
+* Middleware
+* Lightweight dynamic rendering
+
+---
+
+### ISR (Incremental Static Regeneration)
+
+A **hybrid rendering strategy**.
+
+```txt
+Static at build time
+↓
+Revalidated in background after N seconds
+```
+
+Example:
+
+```js
+fetch(url, { next: { revalidate: 60 } })
+```
+
+* Page is static
+* Automatically updated
+* No full rebuild required
+
+---
+
+## 5. Mental Model (Very Important)
+
+| Question                        | Answer  |
+| ------------------------------- | ------- |
+| Is the data user-specific?      | Dynamic |
+| Does it change every request?   | Dynamic |
+| Can everyone see the same HTML? | Static  |
+| Can it update occasionally?     | ISR     |
+
+---
+
+## Final Takeaway
+
+* **Static rendering is the default**
+* **Dynamic rendering is opt-in via usage**
+* Next.js chooses the safest, most correct strategy automatically
+* Performance comes from *how much work happens before the request*
+
+---
+
