@@ -1562,3 +1562,144 @@ fetch(url, { next: { revalidate: 60 } })
 
 ---
 
+
+# How to Analyze Rendering Strategy in Next.js (Static vs Dynamic)
+
+## 1. Use a Production Build (Required)
+
+The **development server is misleading** because:
+
+* Everything behaves dynamically
+* Caching is disabled
+* Rendering strategies are not finalized
+
+### Correct Way
+
+```bash
+npm run build
+```
+
+This runs the **static analysis phase** where Next.js decides:
+
+* Which routes can be pre-rendered
+* Which must run at request time
+
+![h](https://i.ibb.co.com/35Xt7s1C/Screenshot-from-2026-01-20-01-03-32.png)
+
+---
+
+## 2. Understanding the Build Output Symbols
+
+After the build completes, Next.js prints a route table with symbols:
+
+| Symbol | Meaning | Rendering Strategy               |
+| ------ | ------- | -------------------------------- |
+| `○`    | Static  | Pre-rendered at build time       |
+| `λ`    | Dynamic | Server-rendered per request      |
+| `●`    | ISR     | Static + background revalidation |
+
+> These symbols are your **single source of truth**.
+
+---
+
+## 3. Case Study: Cabin Routes
+
+### Observed Output
+
+* `/` → `○` Static
+* `/cabins` → `○` Static
+* `/cabins/[cabinId]` → `λ` Dynamic
+
+This tells us:
+
+* Listing pages are pre-rendered
+* Individual cabin pages are rendered on-demand
+
+---
+
+## 4. **Important Correction: Why the Cabin Page Is Dynamic**
+
+> ❌ **Common misconception:**
+> “Dynamic routes are always dynamic.”
+
+### ✅ Reality (App Router)
+
+A route **with `[cabinId]` is NOT automatically dynamic**.
+
+Next.js only switches to dynamic rendering if:
+
+* The page **reads request-specific data**, OR
+* The page **does not provide static parameters**, OR
+* The data fetching strategy disallows caching
+
+---
+
+### Why `/cabins/[cabinId]` Became Dynamic *Here*
+
+In this app:
+
+* The page **accesses `params.cabinId`**
+* **No `generateStaticParams()`** is provided
+* Next.js cannot know which IDs exist at build time
+
+➡️ Therefore, it must render the page at request time
+➡️ Result: `λ` (dynamic)
+
+---
+
+## 5. How This Could Have Been Static (or ISR)
+
+If the IDs **are known ahead of time**, you can opt into static rendering.
+
+### Static Generation for Dynamic Routes
+
+```js
+export async function generateStaticParams() {
+  const cabins = await getCabins()
+
+  return cabins.map(cabin => ({
+    cabinId: String(cabin.id),
+  }))
+}
+```
+
+Now:
+
+* Each `/cabins/1`, `/cabins/2`, etc. is pre-rendered
+* Build output changes from `λ` → `○` or `●`
+
+---
+
+### Adding ISR
+
+```js
+fetch(url, { next: { revalidate: 60 } })
+```
+
+➡️ Symbol becomes `●`
+➡️ Static + background updates
+
+---
+
+## 6. Mental Model for Build Analysis
+
+When you see `λ`, ask:
+
+1. Is the route reading `cookies()` or `headers()`?
+2. Is `cache: 'no-store'` used?
+3. Is `searchParams` accessed?
+4. Is `generateStaticParams()` missing?
+5. Is `dynamic = 'force-dynamic'` set?
+
+One **yes** → dynamic rendering.
+
+---
+
+## Final Takeaway
+
+* `npm run build` is the **only reliable way** to inspect rendering strategy
+* Build symbols reflect **actual production behavior**
+* Dynamic routes are **not inherently dynamic**
+* Static vs Dynamic is about **what data is needed and when**
+
+---
