@@ -963,3 +963,155 @@ If you want, I can also:
 - Add **description**, **Open Graph**, or **Twitter metadata**
 - Show how to **reuse the same fetch** between `generateMetadata` and the page
 - Compare this with **CSR-based metadata (not recommended for SEO)**
+
+---
+
+## Global Error Handling in Next.js (App Router)
+
+### 1. Goal: Global Error Boundaries
+
+The purpose of global error handling is to **gracefully recover from rendering failures** instead of showing a broken UI or dev stack trace.
+
+Next.js achieves this using **React Error Boundaries**, exposed via the `error.js` convention.
+
+---
+
+## 2. `error.js` – Route Segment Error Boundary
+
+### File Location
+
+```txt
+app/error.js
+```
+
+You can also scope error boundaries:
+
+```txt
+app/cabins/error.js
+```
+
+### Client Component Requirement
+
+`error.js` **must** be a Client Component because it relies on user interaction (`reset()`).
+
+```js
+'use client'
+```
+
+---
+
+## 3. Error Component API
+
+Next.js injects **two props** automatically:
+
+| Prop    | Purpose                                            |
+| ------- | -------------------------------------------------- |
+| `error` | The thrown error (`error.message`, `error.digest`) |
+| `reset` | Retries rendering the failed route segment         |
+
+---
+
+### Minimal Example
+
+```js
+'use client'
+
+export default function Error({ error, reset }) {
+  return (
+    <main className="error">
+      <h1>Something went wrong</h1>
+      <p>{error.message}</p>
+
+      <button onClick={reset}>
+        Try again
+      </button>
+    </main>
+  )
+}
+```
+
+✔ `reset()` re-renders the route
+✔ No manual try/catch required
+✔ Automatically wired by Next.js
+
+---
+
+## 4. What `error.js` Catches (and Doesn’t)
+
+### ✅ Catches
+
+* Errors during **rendering**
+* Errors in **Server Components**
+* Errors in **data fetching during render**
+* Errors in **nested layouts and pages**
+
+### ❌ Does NOT Catch
+
+* Errors inside **event handlers**
+* Errors inside `useEffect`
+* Errors inside the **root layout (`app/layout.js`)**
+
+> React Error Boundaries only work during the render phase.
+
+---
+
+## 5. Handling Root Layout Errors → `global-error.js`
+
+Errors inside `app/layout.js` bypass `error.js`.
+
+### Solution
+
+Create:
+
+```txt
+app/global-error.js
+```
+
+### Key Difference
+
+This file **replaces the entire document**, so you must include `<html>` and `<body>`.
+
+---
+
+### Example `global-error.js`
+
+```js
+'use client'
+
+export default function GlobalError({ error, reset }) {
+  return (
+    <html>
+      <body>
+        <main className="error">
+          <h1>Application Error</h1>
+          <p>{error.message}</p>
+
+          <button onClick={reset}>
+            Reload app
+          </button>
+        </main>
+      </body>
+    </html>
+  )
+}
+```
+
+Use this for:
+
+* Root-level data fetching failures
+* Theme/provider crashes
+* Auth/session initialization errors
+
+---
+
+## 6. Recommended File Summary
+
+```txt
+app/
+├── layout.js
+├── error.js           ← Segment-level errors
+├── global-error.js    ← Root layout errors
+├── not-found.js       ← 404 handling (next topic)
+```
+
+---
