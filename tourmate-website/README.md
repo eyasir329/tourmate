@@ -1115,3 +1115,192 @@ app/
 ```
 
 ---
+
+## Handling **Not Found (404)** Errors in Next.js (App Router)
+
+Unlike runtime errors (handled by `error.js`), **404s are a routing concern**, and Next.js treats them as a **separate rendering flow**.
+
+---
+
+## 1. Global 404 Page (`not-found.js`)
+
+### Purpose
+
+Replaces the default Next.js 404 screen with a **custom, user-friendly page** when:
+
+* A route does not exist
+* A `notFound()` call is triggered and no closer boundary exists
+
+---
+
+### File Convention
+
+```txt
+app/not-found.js
+```
+
+---
+
+### Minimal Implementation
+
+```js
+import Link from 'next/link'
+
+export default function NotFound() {
+  return (
+    <main className="not-found">
+      <h1>Page not found</h1>
+      <p>The page you are looking for does not exist.</p>
+
+      <Link href="/">
+        ← Back to home
+      </Link>
+    </main>
+  )
+}
+```
+
+✅ Server Component by default
+✅ No `'use client'` needed
+✅ Automatically picked up by Next.js
+
+---
+
+## 2. Manually Triggering 404s with `notFound()`
+
+### When This Is Needed
+
+Dynamic routes may exist structurally, but the **data does not**.
+
+Example:
+
+```txt
+/cabins/999   ← route exists
+               ← cabin does not
+```
+
+Showing an error page here would be **wrong** — this is a **404**, not a crash.
+
+---
+
+### The `notFound()` Function
+
+#### Import
+
+```js
+import { notFound } from 'next/navigation'
+```
+
+#### Usage (Server Components only)
+
+```js
+export async function getCabin(id) {
+  const cabin = await fetchCabinFromDB(id)
+
+  if (!cabin) notFound()
+
+  return cabin
+}
+```
+
+📌 Important:
+
+* Immediately **halts execution**
+* Does **not throw** a traditional error
+* Skips `error.js`
+* Renders the nearest `not-found.js`
+
+---
+
+### Common Use Cases
+
+* Invalid dynamic route IDs
+* Deleted resources
+* Unauthorized access masked as non-existent content
+* Empty database results
+
+---
+
+## 3. Scoped (Segment-Level) 404 Pages
+
+Just like layouts and loading states, 404 pages can be **scoped**.
+
+---
+
+### Example Structure
+
+```txt
+app/
+├── cabins/
+│   ├── [cabinId]/
+│   │   ├── page.js
+│   │   ├── not-found.js
+```
+
+---
+
+### Scoped `not-found.js`
+
+```js
+import Link from 'next/link'
+
+export default function CabinNotFound() {
+  return (
+    <main>
+      <h1>Cabin not found</h1>
+      <p>This cabin does not exist or was removed.</p>
+
+      <Link href="/cabins">
+        ← Back to all cabins
+      </Link>
+    </main>
+  )
+}
+```
+
+### Behavior
+
+* `notFound()` inside `[cabinId]` → renders this page
+* Falls back to `app/not-found.js` if no closer match exists
+
+---
+
+## 4. Error vs Not Found — Critical Distinction
+
+| Scenario                       | Use            |
+| ------------------------------ | -------------- |
+| Data fetch failed (500)        | `error.js`     |
+| Rendering crash                | `error.js`     |
+| Invalid URL                    | `not-found.js` |
+| Missing DB record              | `notFound()`   |
+| Unauthorized masked as missing | `notFound()`   |
+
+🚫 **Do NOT** use `error.js` for missing data
+🚫 **Do NOT** throw errors for 404 cases
+
+---
+
+## 5. SEO & UX Benefits
+
+* Correct **HTTP 404 status**
+* Prevents indexing of invalid pages
+* Clean separation between crashes and missing content
+* Better analytics and monitoring
+
+---
+
+## Recommended File Setup
+
+```txt
+app/
+├── layout.js
+├── error.js
+├── global-error.js
+├── not-found.js
+├── cabins/
+│   └── [cabinId]/
+│       ├── page.js
+│       └── not-found.js
+```
+
+---
