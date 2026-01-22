@@ -2074,3 +2074,156 @@ Use:
 * Zero backend
 
 ---
+
+## ✅ Partial Pre-Rendering (PPR)
+
+![img](https://i.ibb.co.com/Nh4sgHr/Screenshot-from-2026-01-22-23-15-30.png)
+![img](https://i.ibb.co.com/xSFVXcdc/Screenshot-from-2026-01-22-23-12-07.png)
+
+### **What PPR Solves (The Big Idea)**
+
+Before PPR:
+
+> ❌ If **any part** of a route was dynamic → **the entire page became dynamic**
+
+This meant:
+
+* No CDN caching
+* Slower TTFB
+* Lost the main benefit of Server Components
+
+---
+
+With **Partial Pre-Rendering**:
+
+> ✅ A route can be **mostly static**, with **isolated dynamic islands**
+
+Static content is cached and served instantly, while only the truly dynamic parts run per request.
+
+---
+
+## 🧠 Mental Model (Very Important)
+
+Think of a page as:
+
+```
+[ STATIC HTML SHELL ]
+    ⬇
+[ SUSPENSE HOLE ]
+    ⬇
+[ STREAMED DYNAMIC CONTENT ]
+```
+
+* The shell is **prebuilt at build time**
+* The holes are **resolved at request time**
+* Streaming stitches them together
+
+---
+
+## 🧩 How PPR Actually Works
+
+### 1. **Static Shell**
+
+* Generated at build time
+* Cached on CDN
+* Sent immediately
+
+Includes:
+
+* Layout
+* Static text
+* Components that **don’t** read:
+
+  * cookies
+  * headers
+  * searchParams
+  * auth/session
+
+---
+
+### 2. **Dynamic Holes (Suspense Boundaries)**
+
+* Any component that **reads request-time data**
+* Wrapped in `<Suspense>`
+* Rendered **in parallel**
+* Streamed into the page when ready
+
+The fallback UI is part of the **static shell**
+
+---
+
+## 🧪 Minimal Example
+
+```tsx
+import { Suspense } from "react";
+import UserMenu from "./UserMenu";
+
+export default function Page() {
+  return (
+    <>
+      <h1>Welcome to The Wild Oasis</h1>
+
+      {/* Static content */}
+      <p>Book your perfect stay.</p>
+
+      {/* Dynamic island */}
+      <Suspense fallback={<div>Loading user...</div>}>
+        <UserMenu />
+      </Suspense>
+    </>
+  );
+}
+```
+
+```tsx
+// UserMenu.tsx
+import { cookies } from "next/headers";
+
+export default function UserMenu() {
+  const user = cookies().get("user");
+  return <div>Hello, {user?.value}</div>;
+}
+```
+
+### 🔍 What Happens Here
+
+| Part          | Rendering                  |
+| ------------- | -------------------------- |
+| `<h1>`, `<p>` | **Static (SSG)**           |
+| `fallback`    | **Static**                 |
+| `UserMenu`    | **Dynamic (request-time)** |
+
+Only `UserMenu` runs per request — **the rest stays cached**.
+
+---
+
+## ⚙️ Why Suspense Is the Key
+
+Suspense tells Next.js:
+
+> “Everything **inside** this boundary may be dynamic
+> Everything **outside** can be safely pre-rendered”
+
+No new API. No new syntax. Just **correct placement**.
+
+---
+
+## ⚠️ Current Status (Important)
+
+* **Next.js 14**: Experimental
+* Requires opt-in in `next.config.js`
+* Not recommended for production *yet*
+* API and behavior may change
+
+You summarized this correctly.
+
+---
+
+## 🔥 When PPR Is Perfect
+
+* Navigation with user info
+* Dashboards with static charts + live stats
+* Marketing pages with auth-aware headers
+* Any page that is **90% static, 10% dynamic**
+
+---
