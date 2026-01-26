@@ -2,6 +2,9 @@ import { Suspense } from "react";
 import CabinList from "../_components/CabinList";
 import Spinner from "../_components/Spinner";
 
+export const revalidate = 3600; // Revalidate data every hour 
+// export const revalidate = 15; // has to be real value
+
 export const metadata = {
   title: "Cabins",
   description: "Discover cozy cabins with tourmate",
