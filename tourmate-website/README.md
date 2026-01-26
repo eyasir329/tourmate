@@ -2396,3 +2396,130 @@ This model lets you:
 * reason about bugs instead of guessing
 
 ---
+
+## ✅ 1. Route Segment Configuration (`revalidate = 0`)
+
+Your explanation is **functionally correct**, but the *reason* it works matters.
+
+### ✅ What’s right
+
+```js
+export const revalidate = 0;
+```
+
+* This **disables the Full Route Cache**
+* The page is regenerated on **every request**
+* Behaves like a **dynamic route**
+
+### 🔧 Precision tweak (important)
+
+> ❌ “always revalidate the data”
+
+What actually happens is:
+
+> ✅ **No caching is allowed at the route level**
+
+So:
+
+* HTML is **never cached**
+* RSC payload is **never cached**
+* All fetches are treated as request-time
+
+📌 Better wording:
+
+> “Setting `revalidate = 0` opts the route out of static rendering and disables the Full Route Cache, making the route dynamic.”
+
+---
+
+## ✅ 2. Component-Level Opt-Out (`unstable_noStore`)
+
+This section is **excellent**, and you’re using it exactly for the right use case (ORMs, DB clients, Supabase, Prisma).
+
+### Code — Correct
+
+```js
+import { unstable_noStore as noStore } from "next/cache";
+
+export default async function Component() {
+  noStore();
+  // data fetching logic
+}
+```
+
+### What this actually does (important nuance)
+
+Calling `noStore()` means:
+
+* ❌ No **Data Cache**
+* ❌ No **Request memoization**
+* ❌ No **Full Route Cache**
+
+📌 Mental rule:
+
+> `noStore()` = “This render depends on request-time state”
+
+---
+
+### ✅ Impact on the Route (You got this right)
+
+> “Opting out for even a single component switches the **entire route** to dynamic rendering.”
+
+✔️ **Correct (today)**
+
+Why?
+
+* The route is only cacheable if **all dependencies are cacheable**
+* One uncached read poisons the tree
+
+---
+
+## 🧠 Key Clarification: `noStore` vs `fetch(no-store)`
+
+This is worth stating explicitly:
+
+| Technique                      | Scope                  |
+| ------------------------------ | ---------------------- |
+| `fetch({ cache: "no-store" })` | **That fetch only**    |
+| `noStore()`                    | **Entire render tree** |
+
+That’s why `noStore()` is stronger — and more dangerous if used casually.
+
+---
+
+## ⚠️ About PPR (This Is the Tricky Part)
+
+Your note is **directionally correct**, but let’s lock it in properly.
+
+### Today (Stable Behavior)
+
+* `noStore()` → **entire route dynamic**
+* Even inside `<Suspense>`
+
+### PPR (Experimental / Future)
+
+* `noStore()` **inside a Suspense boundary**
+* Marks that subtree as **dynamic**
+* Allows:
+
+  * Static shell
+  * Dynamic “holes”
+
+📌 Correct future mental model:
+
+> Suspense defines *where* dynamic behavior is allowed
+> `noStore()` defines *what* is dynamic
+
+So yes — `noStore` is the **mechanism**, Suspense is the **isolation boundary**.
+
+---
+
+## ✅ Final Polished Summary
+
+You can safely say:
+
+* `revalidate = 0` → opt out of **route-level caching**
+* `noStore()` → opt out of **data-level caching**
+* One uncached dependency → route becomes dynamic
+* PPR aims to **contain** that blast radius using Suspense
+
+This explanation is **framework-internals accurate** and absolutely suitable for advanced docs or a Next.js deep-dive.
