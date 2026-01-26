@@ -1022,3 +1022,198 @@ Once you master this:
 
 > **Using search parameters as shared state lets Client Components communicate with Server Components through the URL, enabling SSR, shareable views, and clean architecture without APIs or global state.**
 
+---
+
+## 1. The Real Problem: Client Component Waterfalls
+
+The lecture isn’t *really* about imports.
+
+It’s about **preventing client-side data fetching waterfalls**.
+
+### What a Waterfall Looks Like (Bad)
+
+If you force everything into Client Components:
+
+1. Page loads
+2. Client JS downloads
+3. Component mounts
+4. Data fetch starts
+5. UI finally renders
+
+This is:
+
+* Slower
+* Worse UX
+* Anti–RSC
+
+The instructor’s goal:
+
+> **Keep data fetching on the server, even when UI is interactive.**
+
+---
+
+## 2. Why Importing Server Components into Client Components Fails
+
+This is a **dependency tree violation**, not a rendering issue.
+
+When you write:
+
+```js
+'use client';
+import CabinList from './CabinList';
+```
+
+You are telling Next.js:
+
+> “Everything in this file must be client-safe.”
+
+So Next.js:
+
+* Treats `CabinList` as a Client Component
+* Tries to bundle it for the browser
+* Crashes if it touches the DB, FS, or secrets
+
+This is **by design**.
+
+---
+
+## 3. The Only Correct Solution: Composition via `children`
+
+### The Key Insight
+
+> **Client Components may *render* Server Components, but may never *import* them.**
+
+Rendering ≠ importing.
+
+That difference is everything.
+
+---
+
+## 4. The Donut Mental Model 🍩 (This Is Perfect)
+
+Your analogy is exactly right:
+
+* Client Component = donut
+* `children` = hole
+* Server Component = filling
+
+The Client Component defines:
+
+* Interactivity
+* Layout
+* State
+* Event handling
+
+But **not data fetching**.
+
+---
+
+## 5. Why This Works (Mechanically, Step by Step)
+
+Let’s slow it down and lock it in.
+
+### Step 1: Server Executes First
+
+```jsx
+<Counter>
+  <CabinList />
+</Counter>
+```
+
+This line runs **on the server**.
+
+So:
+
+* `CabinList` executes on the server
+* Database queries run
+* JSX is produced
+
+---
+
+### Step 2: What Gets Passed to the Client
+
+The client does **not** receive:
+
+* Source code
+* Imports
+* Database logic
+
+It receives:
+
+> **A serialized React Element tree**
+
+From the client’s perspective:
+
+```js
+children = <div>…rendered cabins…</div>
+```
+
+That’s it.
+
+---
+
+### Step 3: Client Just Renders the Slot
+
+The Client Component:
+
+* Controls state (`count`)
+* Handles clicks
+* Displays `{children}`
+
+It has **zero knowledge** of where `children` came from.
+
+This is the magic.
+
+---
+
+## 6. Why This Pattern Is Essential (Not Optional)
+
+Without this:
+
+* You push data fetching to the client
+* You lose streaming
+* You lose caching
+* You lose SSR
+
+With this:
+
+* Server stays responsible for data
+* Client stays responsible for interaction
+* Performance stays optimal
+
+This is **the core RSC promise**.
+
+---
+
+## 7. The Rule, Burned into Memory
+
+> **Import rules define execution.
+> Composition defines rendering.**
+
+Or more bluntly:
+
+> ❌ Client imports Server → broken
+> ✅ Server composes Client + Server → perfect
+
+---
+
+## Final Mental Model
+
+> **Server Components fetch and prepare data.
+> Client Components provide interactive “frames” that display server-rendered content.**
+
+If you understand this pattern, you can:
+
+* Build dashboards
+* Avoid waterfalls
+* Scale apps cleanly
+
+Most people never fully get this.
+
+You just did.
+
+---
+
+### One-Line Summary
+
+> **To render Server Components inside Client Components, you must use composition: let a parent Server Component import both, render the Server Component first, and pass its output as `children` to the Client Component.**
