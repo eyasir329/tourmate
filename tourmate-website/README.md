@@ -781,4 +781,244 @@ Once you internalize this, App Router decisions become obvious.
 ### One-Line Summary
 
 > **Highlighting the active navigation link requires a Client Component because reading the current URL via `usePathname` is a browser-only concern, even without traditional interactivity.**
+---
+
+## 1. The Real Problem Being Solved
+
+You already know:
+
+* **Server → Client** data flow = props (easy)
+* **Client → Server** data flow = ❓ (hard)
+
+Traditionally, this meant:
+
+* Local state + effects
+* API calls
+* Global state libraries
+
+This lecture introduces a **simpler and more scalable idea**:
+
+> **Use the URL as the shared state between client and server.**
+
+---
+
+## 2. Why the URL Is the Perfect State Container
+
+The transcript’s arguments are spot-on — and together they form a killer case.
+
+### ✅ Shareable
+
+The URL fully represents the app state:
+
+```txt
+/cabins?capacity=small
+```
+
+Anyone opening this link sees **the same view**.
+
+---
+
+### ✅ Server-Readable
+
+The URL exists **before any JS runs**.
+
+That means:
+
+* Server Components can read it
+* Data can be fetched correctly
+* HTML is rendered already filtered
+
+This is **true SSR**, not client-side filtering.
+
+---
+
+### ✅ Observable
+
+Analytics, logs, and monitoring tools see:
+
+* What users filter by
+* How they navigate
+* What content matters
+
+Local React state is invisible to the outside world.
+URLs are not.
+
+---
+
+## 3. Client Side: Writing State *Into* the URL
+
+The `Filter` component becomes a **URL writer**.
+
+### Why it must be a Client Component
+
+* Uses hooks
+* Responds to clicks
+* Manipulates browser navigation
+
+So `'use client'` is mandatory.
+
+---
+
+### The Three Hooks (Each Has a Role)
+
+| Hook              | Purpose                |
+| ----------------- | ---------------------- |
+| `useSearchParams` | Read current URL state |
+| `usePathname`     | Preserve current route |
+| `useRouter`       | Update the URL         |
+
+This is deliberate — no hook is redundant.
+
+---
+
+### Why `URLSearchParams` Is Copied
+
+```js
+new URLSearchParams(searchParams)
+```
+
+Because:
+
+* `searchParams` is read-only
+* Mutation must be explicit
+* Prevents accidental side effects
+
+This mirrors good backend practices.
+
+---
+
+### Why `router.replace` (Not `push`)
+
+* `replace` avoids polluting browser history
+* Filters feel like state, not navigation
+* Back button remains meaningful
+
+This is a **UX decision**, not just technical.
+
+---
+
+## 4. Server Side: Reading State *From* the URL
+
+This is where the magic happens.
+
+### The Key Fact
+
+> **Every Page automatically receives `searchParams`.**
+
+No imports.
+No hooks.
+No client code.
+
+Just:
+
+```js
+export default function Page({ searchParams }) {}
+```
+
+---
+
+### Defaulting Logic
+
+```js
+const filter = searchParams?.capacity ?? 'all';
+```
+
+This ensures:
+
+* Clean URLs
+* Safe rendering
+* Predictable server behavior
+
+---
+
+### Data Fetching Becomes Deterministic
+
+```js
+getCabins(filter);
+```
+
+Now:
+
+* UI state
+* URL state
+* Database query
+
+…are **perfectly aligned**.
+
+---
+
+## 5. The Scroll Optimization (Small but Important)
+
+By default:
+
+* URL change = scroll reset
+
+For filters, that feels wrong.
+
+```js
+router.replace(url, { scroll: false });
+```
+
+This:
+
+* Keeps context
+* Feels instant
+* Preserves SPA smoothness
+
+While still:
+
+* Triggering a server render
+* Updating real state
+
+Best of both worlds.
+
+---
+
+## 6. The Full Data Flow (Mental Model)
+
+Lock this sequence in:
+
+```
+Client click
+   ↓
+URL update
+   ↓
+Server re-render
+   ↓
+Data refetch
+   ↓
+Streamed HTML
+   ↓
+UI updates
+```
+
+No API.
+No global state.
+No hacks.
+
+Just **URL-driven architecture**.
+
+---
+
+## Why This Pattern Is So Powerful
+
+This is not just for filters.
+
+Same pattern applies to:
+
+* Sorting
+* Pagination
+* Tabs
+* Search queries
+* View modes
+
+Once you master this:
+
+> **You stop fighting server/client boundaries — you use them.**
+
+---
+
+## One-Line Summary
+
+> **Using search parameters as shared state lets Client Components communicate with Server Components through the URL, enabling SSR, shareable views, and clean architecture without APIs or global state.**
 
