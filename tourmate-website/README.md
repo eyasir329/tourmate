@@ -627,3 +627,158 @@ If you follow this rule:
 ### One-Line Summary
 
 > **Interactivity in Next.js is added by extracting small Client Components (“islands”) and embedding them inside Server Components, preserving performance while enabling state and events.**
+
+---
+
+## 1. The Real Goal (Beyond Styling)
+
+Yes, the visible goal is:
+
+> “Highlight the active sidebar link.”
+
+But the *real lesson* of this lecture is:
+
+> **Reading browser state = client-side responsibility**
+
+Even if there is **no click handler**, **no state**, and **no animation**.
+
+---
+
+## 2. Why `usePathname` Is the Correct Tool
+
+`usePathname` exists for one reason:
+
+* To let React read the **current URL inside the browser**
+
+```js
+import { usePathname } from 'next/navigation';
+```
+
+When called, it returns:
+
+```txt
+/cabins
+/settings
+/account
+```
+
+This value:
+
+* Changes when navigation happens
+* Exists only in the browser
+* Is therefore **client-side data**
+
+That single fact dictates everything else.
+
+---
+
+## 3. Why This Forces a Client Component
+
+### The Important Rule
+
+> **All React hooks run on the client.**
+
+So when you do this:
+
+```js
+const pathname = usePathname();
+```
+
+You are implicitly saying:
+
+> “This component must execute in the browser.”
+
+Next.js enforces this strictly.
+
+---
+
+### The Fix (Not Optional)
+
+You must add:
+
+```js
+'use client';
+```
+
+at the **very top** of the file.
+
+This:
+
+* Switches execution to the browser
+* Enables hooks
+* Makes `usePathname` legal
+
+Without it → build-time error.
+
+---
+
+## 4. Implementation Logic (Why It’s Simple by Design)
+
+The transcript intentionally keeps the logic minimal:
+
+```js
+pathname === link.href
+```
+
+Why?
+
+* Predictable
+* Fast
+* Easy to reason about
+
+This avoids:
+
+* Regex complexity
+* Over-engineering
+* Hard-to-debug edge cases
+
+Styling is just a consequence of this comparison.
+
+---
+
+## 5. The Key Architectural Lesson (This Is the Point)
+
+This line from the lecture is subtle but powerful:
+
+> *You don’t need clicks or state to justify a Client Component.*
+
+Reading **any browser-only information** is enough.
+
+That includes:
+
+* URL (`usePathname`)
+* Search params
+* Window size
+* Media queries
+
+So “interactivity” in Next.js really means:
+
+> **Dependence on browser-only data**
+
+---
+
+## 6. How This Fits the Bigger Architecture
+
+This pattern matches everything you’ve learned so far:
+
+* Pages → Server Components (data, layout, performance)
+* Navigation UI → Client Components (URL-aware)
+* Small, focused client islands
+* No unnecessary JS
+
+This is **intentional, professional architecture**.
+
+---
+
+## Final Mental Model
+
+> **If a component needs to *know* what the browser is doing, it must be a Client Component — even if it never handles an event.**
+
+Once you internalize this, App Router decisions become obvious.
+
+---
+
+### One-Line Summary
+
+> **Highlighting the active navigation link requires a Client Component because reading the current URL via `usePathname` is a browser-only concern, even without traditional interactivity.**
+
