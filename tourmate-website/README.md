@@ -249,3 +249,231 @@ That single sentence explains:
 * And 90% of App Router performance decisions
 
 ---
+
+## **6. Deep Dive: Reservation Reminder & `resetRange` (Why This Pattern Is Powerful)**
+
+This part is *sneakily important* because it shows **why Context beats URL state for UI-only interactions**.
+
+---
+
+## **A. What Problem the Reservation Reminder Actually Solves**
+
+Imagine the user flow:
+
+1. User opens **Cabin A**
+2. Selects a date range (e.g., Jan 10 → Jan 15)
+3. Scrolls down, gets distracted
+4. Clicks another cabin
+5. Forgets they already selected dates 😵
+
+Without a reminder:
+
+* The selection exists in memory
+* But the user has **no visual feedback**
+* UX feels broken or confusing
+
+👉 The **Reservation Reminder** acts as a **persistent UI cue** that says:
+
+> “Hey — you’ve already selected dates. Want to continue or clear them?”
+
+---
+
+## **B. Why the Reminder Must Be a Client Component**
+
+The reminder depends on:
+
+* `range` (state)
+* `resetRange()` (function)
+
+Both come from **React Context**, which:
+
+* Uses `useState`
+* Uses `useContext`
+
+⛔ Server Components cannot access this state
+✅ So the reminder **must** be a Client Component
+
+That’s fine — it’s purely UI.
+
+---
+
+## **C. Core Idea: Conditional Rendering Based on Context State**
+
+The entire reminder logic boils down to **one condition**:
+
+```js
+const { range } = useReservation();
+
+if (!range?.from || !range?.to) return null;
+```
+
+### What this means:
+
+* If **no date range exists** → render nothing
+* If **both dates exist** → show the reminder
+
+This is important:
+
+> ❗ The component doesn’t “hide itself”
+> ❗ It simply **does not render at all**
+
+That’s idiomatic React.
+
+---
+
+## **D. Why `resetRange` Is in the Context (Not the Component)**
+
+### ❌ Bad approach (anti-pattern)
+
+```js
+setRange({ from: undefined, to: undefined });
+```
+
+Problems:
+
+* Repeated logic
+* Easy to make mistakes
+* Harder to refactor later
+* Couples UI to state shape
+
+---
+
+### ✅ Correct approach (what the lecture teaches)
+
+```js
+function resetRange() {
+  setRange({ from: undefined, to: undefined });
+}
+```
+
+And expose it via context:
+
+```js
+<ReservationContext.Provider
+  value={{ range, setRange, resetRange }}
+>
+```
+
+### Why this is **architecturally clean**:
+
+| Benefit                    | Explanation                                        |
+| -------------------------- | -------------------------------------------------- |
+| **Encapsulation**          | Components don’t care how state is reset           |
+| **Single source of truth** | Reset logic lives in one place                     |
+| **Future-proof**           | You can add side effects later (analytics, toasts) |
+| **Cleaner UI code**        | Components just call `resetRange()`                |
+
+Think of it like an API:
+
+> Components don’t mutate state — they **ask** the context to do it.
+
+---
+
+## **E. How Reset Instantly Updates the Entire UI**
+
+This is the *magic moment* ✨
+
+When `resetRange()` runs:
+
+1. `setRange({ from: undefined, to: undefined })`
+2. Context state updates
+3. **ALL subscribed components re-render**
+
+   * `DateSelector` → clears calendar
+   * `ReservationForm` → clears dates
+   * `ReservationReminder` → condition fails → disappears
+
+No prop drilling
+No manual syncing
+No hacks
+
+That’s **reactive state done right**.
+
+---
+
+## **F. Why the Reminder Persists Across Pages**
+
+This happens because of **where the Provider lives**:
+
+```txt
+RootLayout (Server)
+ └── ReservationProvider (Client)
+      └── Pages
+           ├── Cabin A
+           ├── Cabin B
+           └── ...
+```
+
+### Key insight:
+
+* Navigating between cabins does **not unmount** the layout
+* The provider stays alive
+* State stays in memory
+
+This gives you:
+
+* Cross-page persistence
+* Zero re-fetch
+* Instant UX
+
+---
+
+## **G. Why Context Is Better Than URL State *Here***
+
+Let’s compare:
+
+### URL-based approach
+
+```txt
+/cabin/1?from=2026-01-10&to=2026-01-15
+```
+
+Problems:
+
+* Triggers navigation
+* Re-runs Server Components
+* Re-fetches data
+* Slower
+* Not semantically correct (this is UI state, not app state)
+
+---
+
+### Context-based approach
+
+* No navigation
+* No server re-render
+* Instant UI updates
+* Clean separation of concerns
+
+📌 **Rule of Thumb (from the lecture)**
+
+> If state affects **what data is fetched** → URL
+> If state affects **only UI behavior** → Context
+
+---
+
+## **H. Mental Model to Remember**
+
+Think of Context here as:
+
+> 🧠 “Temporary client memory that follows the user around”
+
+And `resetRange()` as:
+
+> 🧹 “Clear all booking intent everywhere, instantly”
+
+---
+
+## **I. Final Big Picture**
+
+You now have:
+
+✔ Shared state without prop drilling
+✔ No unnecessary server work
+✔ Instant UI feedback
+✔ Clean architecture
+✔ Scalable pattern for future features
+
+This is **production-grade Next.js design**, not tutorial fluff.
+
+---
