@@ -570,3 +570,204 @@ Think of Auth.js as:
 Everything else in the app **reacts to that truth**.
 
 ---
+
+## **Getting the User Session & Protecting Routes (Auth.js v5)**
+
+This lesson answers two fundamental questions:
+
+1. **Who is the current user?** → Authentication
+2. **Are they allowed to be here?** → Authorization
+
+---
+
+## **1. Retrieving the User Session (Authentication)**
+
+### The key idea
+
+With Auth.js v5, **you fetch the session directly inside Server Components** — no API calls, no hooks, no context.
+
+### Why this is possible
+
+* Server Components run on the server
+* `auth()` is a **server-only function**
+* So you can `await` it like a database call
+
+---
+
+### **Canonical Pattern**
+
+```js
+import { auth } from "@/auth";
+
+export default async function Navigation() {
+  const session = await auth();
+}
+```
+
+### What `auth()` returns
+
+| Case            | Value            |
+| --------------- | ---------------- |
+| User logged in  | `Session` object |
+| User logged out | `null`           |
+
+### Session structure (simplified)
+
+```js
+{
+  user: {
+    name: "John Doe",
+    email: "john@gmail.com",
+    image: "https://lh3.googleusercontent.com/..."
+  },
+  expires: "2026-01-01T12:00:00Z"
+}
+```
+
+This data comes **directly from the OAuth provider** (Google in this case).
+
+---
+
+## **2. Using the Session to Customize UI**
+
+Once you have the session, rendering logic becomes trivial.
+
+### Typical Pattern
+
+```jsx
+{session?.user?.image ? (
+  <img
+    src={session.user.image}
+    alt={session.user.name}
+    referrerPolicy="no-referrer"
+  />
+) : (
+  <Link href="/login">Guest Area</Link>
+)}
+```
+
+### Why `referrerPolicy="no-referrer"` matters
+
+Google-hosted images often **block requests with referrer headers**, especially in production.
+This attribute prevents broken avatars.
+
+---
+
+## **3. Authentication vs Authorization (Critical Distinction)**
+
+| Concept            | Meaning               |
+| ------------------ | --------------------- |
+| **Authentication** | Who are you?          |
+| **Authorization**  | Are you allowed here? |
+
+Fetching the session solves **authentication**.
+Protecting routes requires **authorization** → Middleware.
+
+---
+
+## **4. Middleware in Auth.js v5 (The Elegant Part)**
+
+### Old mental model (v4)
+
+* Custom middleware
+* Manual redirects
+* Token parsing
+* Boilerplate
+
+### New mental model (v5)
+
+> **Auth.js itself *is* the middleware**
+
+---
+
+### **Minimal Middleware Setup**
+
+```js
+export { auth as middleware } from "@/auth";
+```
+
+That single line:
+
+* Checks the session
+* Handles redirects
+* Integrates with Next.js routing
+* Works at the **Edge**
+
+No logic needed.
+
+---
+
+## **5. Route Protection with `matcher`**
+
+Middleware runs on **every request** by default — which is unnecessary and slow.
+
+### Solution: `matcher`
+
+```js
+export const config = {
+  matcher: ["/account"],
+};
+```
+
+### What this does
+
+* Middleware only runs for `/account`
+* All other routes bypass it
+* Performance stays optimal
+
+You can also do:
+
+```js
+matcher: ["/account/:path*"]
+```
+
+to protect nested routes.
+
+---
+
+## **6. Automatic Redirect Behavior (Zero Code)**
+
+Auth.js middleware gives you **opinionated defaults**:
+
+### Flow
+
+1. User visits `/account`
+2. Middleware intercepts
+3. Session check runs
+4. Result:
+
+   * ✅ Logged in → request continues
+   * ❌ Logged out → redirect to `/api/auth/signin`
+
+You didn’t write **any redirect logic** — Auth.js handles it.
+
+---
+
+## **7. Why This Architecture Is Powerful**
+
+### What you gain
+
+* Server-first auth
+* No client-side auth hacks
+* No loading spinners for session
+* Secure route protection
+* Edge-compatible authorization
+
+### What you avoid
+
+* `useSession()` waterfalls
+* Flash of unauthenticated content
+* Client-only guards
+* Duplicated logic
+
+---
+
+## **8. The Mental Model to Lock In**
+
+> 🔐 **Authentication lives in Server Components**
+> 🛂 **Authorization lives in Middleware**
+> 🧠 **Auth.js connects both with one config**
+
+This is the **canonical, production-grade Next.js auth setup** in 2025.
+
+---
