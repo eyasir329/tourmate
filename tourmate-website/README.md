@@ -4,19 +4,45 @@ Customer-facing site for The Wild Oasis, built with Next.js 14 (App Router), Tai
 
 This README is intentionally short and practical: how to run the app, how the repo is laid out, and which env vars you need.
 
-## Requirements
+## Table of contents
+
+- [Getting started](#getting-started)
+  - [Requirements](#requirements)
+  - [Quick start](#quick-start)
+  - [Environment variables](#environment-variables)
+- [Project guide](#project-guide)
+  - [Scripts](#scripts)
+  - [Project map](#project-map)
+  - [Routes](#routes)
+  - [Next.js notes](#nextjs-notes)
+- [Architecture notes](#architecture-notes)
+  - [Core principle](#core-principle)
+  - [Strategy 1: fetch in `page.js` blocks streaming](#1-strategy-1-anti-pattern-fetch-in-pagejs)
+  - [Strategy 2: granular fetching enables streaming](#2-strategy-2-granular-fetching-enables-streaming)
+  - [Deep dive: reservation reminder & `resetRange`](#deep-dive-reservation-reminder--resetrange)
+- [API guide (route handlers)](#api-guide-route-handlers)
+  - [What route handlers are](#1-what-route-handlers-are)
+  - [File-system routing](#3-file-system-routing)
+  - [HTTP verbs](#4-http-verbs-as-first-class-functions)
+  - [Returning responses](#6-returning-responses-the-right-way)
+  - [Error handling](#8-error-handling-pattern)
+  - [Authentication & security](#9-authentication--security)
+
+## Getting started
+
+### Requirements
 
 - Node.js 18+ (recommended)
 - npm
 
-## Quick start
+### Quick start
 
     npm install
     npm run dev
 
-Then open http://localhost:3000
+Then open <http://localhost:3000>
 
-## Environment variables
+### Environment variables
 
 Supabase is configured in app/_lib/supabase.js using:
 
@@ -30,7 +56,9 @@ Create .env.local in the project root:
 
 Note: keep these server-side. Do not expose service role keys to the browser.
 
-## Scripts
+## Project guide
+
+### Scripts
 
 - npm run dev: start dev server
 - npm run build: production build
@@ -38,7 +66,7 @@ Note: keep these server-side. Do not expose service role keys to the browser.
 - npm run prod: build + start
 - npm run lint: run ESLint
 
-## Project map
+### Project map
 
     app/
       _components/      UI components
@@ -56,7 +84,7 @@ Note: keep these server-side. Do not expose service role keys to the browser.
 
 Path alias: @/* maps to the project root (see jsconfig.json).
 
-## Routes
+### Routes
 
 - / -> app/page.js
 - /cabins -> app/cabins/page.js
@@ -66,7 +94,7 @@ Path alias: @/* maps to the project root (see jsconfig.json).
 - /account/profile -> app/account/profile/page.js
 - /account/reservations -> app/account/reservations/page.js
 
-## Next.js notes
+### Next.js notes
 
 - app/error.js and app/not-found.js control error/404 UI.
 - Use notFound() for "missing resource" flows (see getCabin() in app/_lib/data-service.js).
@@ -74,7 +102,9 @@ Path alias: @/* maps to the project root (see jsconfig.json).
 
 ---
 
-## The Core Principle Behind This Lecture
+## Architecture notes
+
+### Core principle
 
 > **Fetch data as low in the tree as possible — but no lower than necessary.**
 
@@ -82,7 +112,7 @@ Everything in this lecture flows from that rule.
 
 ---
 
-## 1. Why Strategy 1 Feels “Correct” but Is Actually Wrong
+### 1. Strategy 1 (anti-pattern): fetch in `page.js`
 
 Fetching everything in `page.js` looks clean:
 
@@ -96,26 +126,26 @@ await Promise.all([
 
 From a *data* perspective:
 
-* ✅ Parallel
-* ✅ Simple
-* ✅ No duplication
+- ✅ Parallel
+- ✅ Simple
+- ✅ No duplication
 
 From a *rendering* perspective:
 
-* ❌ Catastrophic for UX
+- ❌ Catastrophic for UX
 
 ### The Key Problem: Server Components Are Blocking
 
 A Server Component:
 
-* **Does not render progressively**
-* **Waits for *all* awaited data**
-* **Blocks HTML streaming**
+- **Does not render progressively**
+- **Waits for *all* awaited data**
+- **Blocks HTML streaming**
 
 So even though:
 
-* `getCabin()` = 100ms
-* `getSettings()` = 5s
+- `getCabin()` = 100ms
+- `getSettings()` = 5s
 
 The user sees **nothing** for 5 seconds.
 
@@ -125,7 +155,7 @@ This violates the golden UX rule:
 
 ---
 
-## 2. Strategy 2: Granular Fetching Enables Streaming
+### 2. Strategy 2: granular fetching enables streaming
 
 Moving slow data into `<Reservation />` changes everything.
 
@@ -137,15 +167,15 @@ Moving slow data into `<Reservation />` changes everything.
 
 This unlocks:
 
-* Streaming
-* Suspense boundaries
-* Partial page rendering
+- Streaming
+- Suspense boundaries
+- Partial page rendering
 
 Even though everything is still a **Server Component**, the experience feels “client-like”.
 
 ---
 
-## 3. Why `<Reservation />` Is the Correct Fetch Boundary
+### 3. Why `<Reservation />` is the correct fetch boundary
 
 This is the most important architectural decision in the lecture.
 
@@ -170,13 +200,13 @@ One shared dependency.
 
 ---
 
-## 4. The Correct Solution: Fetch in the Nearest Common Parent
+### 4. Fetch in the nearest common parent
 
 `<Reservation />` is:
 
-* The **lowest common ancestor**
-* The **smallest blocking boundary**
-* The **logical domain owner** of reservation logic
+- The **lowest common ancestor**
+- The **smallest blocking boundary**
+- The **logical domain owner** of reservation logic
 
 So it becomes the data-fetching hub:
 
@@ -189,18 +219,18 @@ const [settings, bookedDates] = await Promise.all([
 
 Then:
 
-* `settings + bookedDates` → `<DateSelector />`
-* `settings` → `<ReservationForm />`
+- `settings + bookedDates` → `<DateSelector />`
+- `settings` → `<ReservationForm />`
 
 This keeps:
 
-* Fetching centralized
-* UI decoupled
-* Performance optimal
+- Fetching centralized
+- UI decoupled
+- Performance optimal
 
 ---
 
-## 5. Why This Architecture Scales Beautifully
+### 5. Why this architecture scales
 
 This pattern gives you:
 
@@ -218,19 +248,19 @@ Each component fetches exactly what it owns.
 
 ### ✅ Clean Ownership
 
-* Page = routing + layout
-* Reservation = reservation domain
-* Children = presentation + interaction
+- Page = routing + layout
+- Reservation = reservation domain
+- Children = presentation + interaction
 
 ---
 
-## 6. The Big Picture Mental Model
+### 6. Data-islands mental model
 
 Think in **data islands**:
 
-* The page is not one data island.
-* Each slow feature is its own island.
-* Islands stream independently.
+- The page is not one data island.
+- Each slow feature is its own island.
+- Islands stream independently.
 
 > **Pages orchestrate.
 > Sections fetch.
@@ -238,25 +268,25 @@ Think in **data islands**:
 
 ---
 
-## Final Rule of Thumb (From the Lecture)
+### Rule of thumb
 
 > **If multiple components need the same data, fetch it once in their closest shared parent — but never higher than needed.**
 
 That single sentence explains:
 
-* This lecture
-* The previous Server/Client composition lecture
-* And 90% of App Router performance decisions
+- This lecture
+- The previous Server/Client composition lecture
+- And 90% of App Router performance decisions
 
 ---
 
-## **6. Deep Dive: Reservation Reminder & `resetRange` (Why This Pattern Is Powerful)**
+### Deep dive: reservation reminder & `resetRange`
 
 This part is *sneakily important* because it shows **why Context beats URL state for UI-only interactions**.
 
 ---
 
-## **A. What Problem the Reservation Reminder Actually Solves**
+#### A. What problem the reservation reminder actually solves
 
 Imagine the user flow:
 
@@ -268,9 +298,9 @@ Imagine the user flow:
 
 Without a reminder:
 
-* The selection exists in memory
-* But the user has **no visual feedback**
-* UX feels broken or confusing
+- The selection exists in memory
+- But the user has **no visual feedback**
+- UX feels broken or confusing
 
 👉 The **Reservation Reminder** acts as a **persistent UI cue** that says:
 
@@ -278,17 +308,17 @@ Without a reminder:
 
 ---
 
-## **B. Why the Reminder Must Be a Client Component**
+#### B. Why the reminder must be a Client Component
 
 The reminder depends on:
 
-* `range` (state)
-* `resetRange()` (function)
+- `range` (state)
+- `resetRange()` (function)
 
 Both come from **React Context**, which:
 
-* Uses `useState`
-* Uses `useContext`
+- Uses `useState`
+- Uses `useContext`
 
 ⛔ Server Components cannot access this state
 ✅ So the reminder **must** be a Client Component
@@ -297,7 +327,7 @@ That’s fine — it’s purely UI.
 
 ---
 
-## **C. Core Idea: Conditional Rendering Based on Context State**
+#### C. Conditional rendering based on context state
 
 The entire reminder logic boils down to **one condition**:
 
@@ -307,10 +337,10 @@ const { range } = useReservation();
 if (!range?.from || !range?.to) return null;
 ```
 
-### What this means:
+### What this means
 
-* If **no date range exists** → render nothing
-* If **both dates exist** → show the reminder
+- If **no date range exists** → render nothing
+- If **both dates exist** → show the reminder
 
 This is important:
 
@@ -321,7 +351,7 @@ That’s idiomatic React.
 
 ---
 
-## **D. Why `resetRange` Is in the Context (Not the Component)**
+#### D. Why `resetRange` belongs in context (not the component)
 
 ### ❌ Bad approach (anti-pattern)
 
@@ -331,10 +361,10 @@ setRange({ from: undefined, to: undefined });
 
 Problems:
 
-* Repeated logic
-* Easy to make mistakes
-* Harder to refactor later
-* Couples UI to state shape
+- Repeated logic
+- Easy to make mistakes
+- Harder to refactor later
+- Couples UI to state shape
 
 ---
 
@@ -354,7 +384,7 @@ And expose it via context:
 >
 ```
 
-### Why this is **architecturally clean**:
+### Why this is **architecturally clean**
 
 | Benefit                    | Explanation                                        |
 | -------------------------- | -------------------------------------------------- |
@@ -369,7 +399,7 @@ Think of it like an API:
 
 ---
 
-## **E. How Reset Instantly Updates the Entire UI**
+#### E. How reset instantly updates the UI
 
 This is the *magic moment* ✨
 
@@ -379,9 +409,9 @@ When `resetRange()` runs:
 2. Context state updates
 3. **ALL subscribed components re-render**
 
-   * `DateSelector` → clears calendar
-   * `ReservationForm` → clears dates
-   * `ReservationReminder` → condition fails → disappears
+   - `DateSelector` → clears calendar
+   - `ReservationForm` → clears dates
+   - `ReservationReminder` → condition fails → disappears
 
 No prop drilling
 No manual syncing
@@ -391,7 +421,7 @@ That’s **reactive state done right**.
 
 ---
 
-## **F. Why the Reminder Persists Across Pages**
+#### F. Why the reminder persists across pages
 
 This happens because of **where the Provider lives**:
 
@@ -404,21 +434,21 @@ RootLayout (Server)
            └── ...
 ```
 
-### Key insight:
+### Key insight
 
-* Navigating between cabins does **not unmount** the layout
-* The provider stays alive
-* State stays in memory
+- Navigating between cabins does **not unmount** the layout
+- The provider stays alive
+- State stays in memory
 
 This gives you:
 
-* Cross-page persistence
-* Zero re-fetch
-* Instant UX
+- Cross-page persistence
+- Zero re-fetch
+- Instant UX
 
 ---
 
-## **G. Why Context Is Better Than URL State *Here***
+#### G. Why context is better than URL state here
 
 Let’s compare:
 
@@ -430,20 +460,20 @@ Let’s compare:
 
 Problems:
 
-* Triggers navigation
-* Re-runs Server Components
-* Re-fetches data
-* Slower
-* Not semantically correct (this is UI state, not app state)
+- Triggers navigation
+- Re-runs Server Components
+- Re-fetches data
+- Slower
+- Not semantically correct (this is UI state, not app state)
 
 ---
 
 ### Context-based approach
 
-* No navigation
-* No server re-render
-* Instant UI updates
-* Clean separation of concerns
+- No navigation
+- No server re-render
+- Instant UI updates
+- Clean separation of concerns
 
 📌 **Rule of Thumb (from the lecture)**
 
@@ -452,7 +482,7 @@ Problems:
 
 ---
 
-## **H. Mental Model to Remember**
+#### H. Mental model to remember
 
 Think of Context here as:
 
@@ -464,7 +494,7 @@ And `resetRange()` as:
 
 ---
 
-## **I. Final Big Picture**
+#### I. Final big picture
 
 You now have:
 
@@ -478,11 +508,11 @@ This is **production-grade Next.js design**, not tutorial fluff.
 
 ---
 
-# **Creating an API Endpoint With Route Handlers — Deep, Practical Guide**
+## API guide (route handlers)
 
 ---
 
-## **1. What Route Handlers *Really* Are**
+### 1. What route handlers are
 
 At a conceptual level, a **Route Handler** is:
 
@@ -490,35 +520,35 @@ At a conceptual level, a **Route Handler** is:
 
 They:
 
-* Run **only on the server**
-* Use **standard Web APIs** (`Request`, `Response`)
-* Can talk directly to databases, Supabase, Stripe, etc.
-* Are framework-aware (cookies, headers, caching)
+- Run **only on the server**
+- Use **standard Web APIs** (`Request`, `Response`)
+- Can talk directly to databases, Supabase, Stripe, etc.
+- Are framework-aware (cookies, headers, caching)
 
 They are **not React components**.
 They are **request handlers**.
 
 ---
 
-## **2. Why Route Handlers Still Matter (Even with Server Actions)**
+### 2. Why route handlers still matter (even with Server Actions)
 
 ### 🔹 Server Actions
 
 Best for:
 
-* Form submissions
-* Internal mutations
-* UI-triggered updates
-* Tight coupling to components
+- Form submissions
+- Internal mutations
+- UI-triggered updates
+- Tight coupling to components
 
 ### 🔹 Route Handlers
 
 Still essential for:
 
-* External clients (mobile apps, Postman, third-party services)
-* Webhooks (Stripe, GitHub, Clerk, etc.)
-* Public APIs
-* Fine-grained HTTP control (status codes, headers, auth)
+- External clients (mobile apps, Postman, third-party services)
+- Webhooks (Stripe, GitHub, Clerk, etc.)
+- Public APIs
+- Fine-grained HTTP control (status codes, headers, auth)
 
 📌 **Rule of Thumb**
 
@@ -527,7 +557,7 @@ Still essential for:
 
 ---
 
-## **3. File-System Routing (This Is Non-Negotiable)**
+### 3. File-system routing
 
 ### Basic API Route
 
@@ -559,14 +589,14 @@ app/cabins/route.js ❌
 
 Why?
 
-* `page.js` → browser navigation
-* `route.js` → API response
+- `page.js` → browser navigation
+- `route.js` → API response
 
 Next.js refuses ambiguity.
 
 ---
 
-## **4. HTTP Verbs as First-Class Functions**
+### 4. HTTP verbs as first-class functions
 
 This is a **huge design improvement** over the Pages Router.
 
@@ -587,21 +617,21 @@ export async function POST() {}
 export async function DELETE() {}
 ```
 
-### Why this is better:
+### Why this is better
 
-* Clear intent
-* Tree-shakeable
-* Easier to reason about
-* Matches REST semantics
+- Clear intent
+- Tree-shakeable
+- Easier to reason about
+- Matches REST semantics
 
 Each function:
 
-* Is **independent**
-* Handles exactly **one HTTP verb**
+- Is **independent**
+- Handles exactly **one HTTP verb**
 
 ---
 
-## **5. The Request & Params Objects (What You Actually Get)**
+### 5. The Request & params objects
 
 ### Function signature
 
@@ -613,10 +643,10 @@ export async function DELETE(request, { params }) {}
 
 Standard Web API `Request`:
 
-* `request.headers`
-* `request.cookies`
-* `request.json()`
-* `request.method`
+- `request.headers`
+- `request.cookies`
+- `request.json()`
+- `request.method`
 
 ### `{ params }`
 
@@ -632,7 +662,7 @@ params = { cabinId: "123" }
 
 ---
 
-## **6. Returning Responses the Right Way**
+### 6. Returning responses the right way
 
 ### ❌ Don’t do this
 
@@ -650,14 +680,14 @@ return NextResponse.json(data);
 
 Why?
 
-* Correct headers
-* Streaming support
-* Middleware compatibility
-* Future-proof
+- Correct headers
+- Streaming support
+- Middleware compatibility
+- Future-proof
 
 ---
 
-## **7. Status Codes Matter (Production Detail)**
+### 7. Status codes matter
 
 The transcript shows:
 
@@ -685,13 +715,13 @@ return NextResponse.json(
 
 This is **critical** for:
 
-* Frontend error handling
-* External clients
-* API consumers
+- Frontend error handling
+- External clients
+- API consumers
 
 ---
 
-## **8. Error Handling Pattern (Clean & Predictable)**
+### 8. Error handling pattern
 
 ### Recommended structure
 
@@ -713,18 +743,18 @@ export async function DELETE(request, { params }) {
 
 Why:
 
-* Never leak internal errors
-* Predictable API shape
-* Safe for production
+- Never leak internal errors
+- Predictable API shape
+- Safe for production
 
 ---
 
-## **9. Authentication & Security (Often Missed)**
+### 9. Authentication & security
 
 Route Handlers:
 
-* **Do NOT inherit client auth automatically**
-* Must manually check cookies / headers
+- **Do NOT inherit client auth automatically**
+- Must manually check cookies / headers
 
 Example:
 
@@ -737,15 +767,15 @@ const session = cookieStore.get('session');
 
 If this endpoint deletes data:
 
-* You **must** validate user permissions
-* Otherwise anyone can hit `/api/cabins/123`
+- You **must** validate user permissions
+- Otherwise anyone can hit `/api/cabins/123`
 
 📌 **Server Actions auto-protect UI flows**
 📌 **Route Handlers must be secured explicitly**
 
 ---
 
-## **10. Route Handlers vs Server Components (Key Boundary)**
+### 10. Route handlers vs Server Components
 
 | Feature                    | Server Component | Route Handler |
 | -------------------------- | ---------------- | ------------- |
@@ -759,12 +789,12 @@ They serve **entirely different purposes**.
 
 ---
 
-## **11. Caching Behavior (Advanced Insight)**
+### 11. Caching behavior
 
 By default:
 
-* Route Handlers are **dynamic**
-* Not cached like Server Components
+- Route Handlers are **dynamic**
+- Not cached like Server Components
 
 You can control caching via:
 
@@ -786,24 +816,24 @@ This is **huge** for APIs.
 
 ---
 
-## **12. When NOT to Use Route Handlers**
+### 12. When not to use route handlers
 
 ❌ Don’t use them for:
 
-* Simple form submissions
-* UI-only mutations
-* Internal app state
+- Simple form submissions
+- UI-only mutations
+- Internal app state
 
 Server Actions are:
 
-* Faster
-* Simpler
-* More secure
-* Better DX
+- Faster
+- Simpler
+- More secure
+- Better DX
 
 ---
 
-## **13. Mental Model to Lock This In**
+### 13. Mental model to lock this in
 
 Think of Route Handlers as:
 
@@ -817,7 +847,7 @@ Once you see this split, everything clicks.
 
 ---
 
-## **14. Final Architecture Summary**
+### 14. Final architecture summary
 
 ```txt
 UI Event
@@ -827,9 +857,9 @@ UI Event
 
 You now understand:
 
-* Why Route Handlers exist
-* When to use them
-* How they differ from old API routes
-* How they fit into modern Next.js architecture
+- Why Route Handlers exist
+- When to use them
+- How they differ from old API routes
+- How they fit into modern Next.js architecture
 
 ---
