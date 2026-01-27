@@ -326,3 +326,247 @@ After this section:
 This is one of the **most valuable sections** in the entire course.
 
 ---
+
+## **Setting Up NextAuth (Auth.js) in Next.js App Router**
+
+This lecture is about **bootstrapping authentication correctly** in the App Router world — no hacks, no legacy patterns.
+
+---
+
+## **1. Why NextAuth v5 (Beta) Matters**
+
+### What changed in v5
+
+* Built **specifically** for the App Router
+* Uses **Web APIs** instead of Node-only APIs
+* Integrates cleanly with:
+
+  * Server Components
+  * Server Actions
+  * Route Handlers
+  * Middleware
+
+> ⚠️ v4 patterns (`pages/api/auth`) are **not compatible** with App Router best practices.
+
+That’s why the course explicitly installs:
+
+```bash
+npm install next-auth@beta
+```
+
+You’re opting into the **future-proof** API.
+
+---
+
+## **2. The Heart of Auth.js: `auth.js` (Root-Level)**
+
+### Why this file exists
+
+In v5, **all auth configuration lives in one place** — not scattered across API routes and helpers.
+
+📍 **Location**
+
+```
+/auth.js   ← project root (NOT inside /app)
+```
+
+### What happens in this file
+
+* You define providers
+* You initialize Auth.js
+* You export utilities used everywhere else
+
+---
+
+### **Minimal Working Setup**
+
+```js
+import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
+
+export const { auth, handlers, signIn, signOut } = NextAuth({
+  providers: [Google],
+});
+```
+
+### What each export is used for
+
+| Export     | Purpose                                   |
+| ---------- | ----------------------------------------- |
+| `auth`     | Read the session in **Server Components** |
+| `handlers` | Plug into API Route Handlers              |
+| `signIn`   | Server Action to trigger login            |
+| `signOut`  | Server Action to trigger logout           |
+
+> 💡 This design eliminates helper boilerplate you had to write manually in v4.
+
+---
+
+## **3. Exposing Auth Routes with Route Handlers**
+
+Auth.js **does not automatically create routes** — you must explicitly expose them.
+
+### Required Path
+
+```
+app/api/auth/[...nextauth]/route.js
+```
+
+This is a **catch-all route**, meaning:
+
+* `/api/auth/signin`
+* `/api/auth/callback/google`
+* `/api/auth/signout`
+* etc.
+
+…are all handled by this single file.
+
+---
+
+### **Implementation (Dead Simple)**
+
+```js
+import { handlers } from "@/auth";
+
+export const { GET, POST } = handlers;
+```
+
+That’s it.
+
+Why this works:
+
+* Auth.js already defines the logic
+* You’re just wiring it into Next.js routing
+
+---
+
+## **4. Google OAuth — The Only “External” Setup**
+
+Authentication always requires **trusting an identity provider**. Here, that’s Google.
+
+---
+
+### **OAuth Consent Screen**
+
+* User type: **External**
+* Required fields:
+
+  * App name
+  * Support email
+  * Developer contact email
+
+This is not optional — Google blocks OAuth without it.
+
+---
+
+### **OAuth Credentials**
+
+Create a **Web Application** client.
+
+#### 🚨 Critical Redirect URI
+
+```txt
+http://localhost:3000/api/auth/callback/google
+```
+
+Why this exact URL?
+
+* Auth.js expects this path
+* Google must explicitly whitelist it
+* Any mismatch = authentication failure
+
+> 🔁 When deploying, you must add the **production domain** version too.
+
+---
+
+## **5. Environment Variables (Strict Naming Rules)**
+
+Auth.js v5 **auto-detects** environment variables — but **only** if named exactly right.
+
+### Required `.env.local` entries
+
+```env
+AUTH_GOOGLE_ID=your_google_client_id
+AUTH_GOOGLE_SECRET=your_google_client_secret
+AUTH_SECRET=some_random_string
+```
+
+### Generating `AUTH_SECRET`
+
+```bash
+openssl rand -base64 32
+```
+
+### Why names matter
+
+Auth.js scans for:
+
+* `AUTH_<PROVIDER>_ID`
+* `AUTH_<PROVIDER>_SECRET`
+
+❌ `GOOGLE_CLIENT_ID` → ignored
+✅ `AUTH_GOOGLE_ID` → detected
+
+This is one of the **most common failure points**.
+
+---
+
+## **6. Testing Without Writing Any UI**
+
+One of the best parts of Auth.js is **instant validation**.
+
+### Manual Test
+
+Visit:
+
+```
+http://localhost:3000/api/auth/signin
+```
+
+### Expected behavior
+
+* Auth.js-generated login page
+* “Sign in with Google” button
+* Full OAuth flow
+* Redirect back to your app
+
+If this works:
+✅ Providers configured correctly
+✅ Route handler wired
+✅ Environment variables detected
+
+---
+
+## **7. Architectural Takeaways (Important)**
+
+### What this setup gives you immediately
+
+* Secure authentication
+* Session handling
+* OAuth integration
+* Server-side session access
+* Zero custom auth logic
+
+### What it does *not* yet do
+
+* Protect routes
+* Sync users with Supabase
+* Handle authorization rules
+* Customize UI
+
+Those come **next**, and now you have the foundation to do them *cleanly*.
+
+---
+
+## **Mental Model to Keep**
+
+Think of Auth.js as:
+
+> 🧠 **A session engine that lives on the server**
+> 🎛️ Controlled via Server Actions
+> 🌍 Exposed via Route Handlers
+> 🔐 Backed by trusted OAuth providers
+
+Everything else in the app **reacts to that truth**.
+
+---
