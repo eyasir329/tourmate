@@ -929,3 +929,155 @@ If something should happen **before** a page loads
 
 ---
 
+## **Protecting Routes With NextAuth Middleware**
+
+### **1. The Goal: Protect Private Routes**
+
+We want to restrict access to certain parts of the application—specifically the **Guest Area**—so that:
+
+* ❌ **Unauthenticated users** cannot access routes under `/account`
+* ✅ **Authenticated users** can access those routes normally
+
+In short:
+
+> `/account/*` should only be visible to logged-in users.
+
+---
+
+### **2. The Solution: NextAuth v5 Middleware**
+
+NextAuth v5 makes this extremely simple.
+
+Instead of writing custom middleware logic, we reuse the **`auth` configuration** we already set up.
+That `auth` function can be exported **directly** as middleware.
+
+This works because:
+
+* `auth` already knows how to read the session
+* It automatically handles redirects
+* It appends callback URLs correctly
+
+---
+
+### **3. Implementation Steps**
+
+---
+
+### **Step A: Create the Middleware File**
+
+* **File name:** `middleware.js` (or `middleware.ts`)
+* **Location:**
+
+  * Project root
+  * Or inside `src/` if your app uses it
+
+🚫 Do **not** place it inside the `app/` folder.
+
+---
+
+### **Step B: Export NextAuth as Middleware**
+
+```js
+// middleware.js
+import { auth } from "@/auth";
+
+export const middleware = auth;
+```
+
+That’s it.
+
+No conditionals.
+No manual redirects.
+No session parsing.
+
+NextAuth handles everything internally.
+
+---
+
+### **Step C: Configure the Matcher (Very Important)**
+
+Without a matcher, the middleware would run on **every route**, including:
+
+* Homepage
+* Public pages
+* Static assets
+
+To limit protection to the Guest Area, define a matcher.
+
+```js
+export const config = {
+  matcher: ["/account"],
+};
+```
+
+✅ This protects:
+
+* `/account`
+* `/account/profile`
+* `/account/reservations`
+* Any nested route under `/account/*`
+
+---
+
+### **4. How It Works at Runtime**
+
+Once configured, the behavior is automatic:
+
+#### **1. Request Interception**
+
+When a user visits `/account`, the middleware runs **before** the page loads.
+
+---
+
+#### **2. Session Check**
+
+NextAuth checks whether a valid session exists.
+
+* **If authenticated:**
+  The request is allowed to continue.
+
+* **If unauthenticated:**
+  The user is redirected automatically.
+
+---
+
+#### **3. Redirect + Callback URL**
+
+Unauthenticated users are redirected to:
+
+```
+/api/auth/signin?callbackUrl=/account
+```
+
+This is critical.
+
+After the user logs in (e.g., with Google):
+
+* NextAuth reads `callbackUrl`
+* Redirects them **back to the original page**
+* The user lands exactly where they intended
+
+No extra logic required.
+
+---
+
+### **Why This Approach Is Ideal**
+
+* ✅ Centralized authorization logic
+* ✅ Zero duplication across pages
+* ✅ Secure by default
+* ✅ Works at the **Edge** (fast)
+* ✅ Official NextAuth v5 pattern
+
+---
+
+### **Mental Model to Remember**
+
+> **`auth` is not just configuration — it *is* middleware**
+
+If a route must be protected:
+
+* Add it to the matcher
+* Let NextAuth handle the rest
+
+---
