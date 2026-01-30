@@ -1245,3 +1245,142 @@ Unauthenticated users must be allowed to access `/login`.
 Once you internalize that, custom auth flows become simple and predictable.
 
 ---
+
+## **Building a Custom Sign-Out Button (NextAuth v5 + Server Actions)**
+
+### **1. The Goal**
+
+The goal is to create a reusable **Sign Out button** that:
+
+* Can live anywhere (sidebar, navbar, dropdown)
+* Securely terminates the user session
+* Updates the UI back to the “Guest” state
+* Uses **Server Actions** (no client-side handlers)
+
+---
+
+### **2. The Core Pattern (Same as Sign-In)**
+
+Just like the custom Sign-In button:
+
+* ❌ No `onClick`
+* ❌ No client-side logic
+* ✅ Use a **Server Action**
+* ✅ Trigger it via a standard HTML `<form>`
+
+This keeps authentication logic **server-only**, secure, and predictable.
+
+---
+
+### **3. Implementation Breakdown**
+
+---
+
+### **Step A: Define the Server Action**
+
+Inside the component, define an async function and mark it as a Server Action.
+
+**Key points:**
+
+* `"use server"` is required
+* Import `signOut` from your centralized `@/auth` file
+* Optionally pass a redirect destination
+
+---
+
+### **Step B: Bind the Action to a Form**
+
+* Attach the Server Action to the form’s `action` prop
+* Clicking the button submits the form
+* Submission triggers the server-side sign-out logic
+
+---
+
+### **4. Complete Example**
+
+```js
+import { signOut } from "@/auth";
+import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/solid";
+
+function SignOutButton() {
+  // 1. Server Action
+  async function signOutAction() {
+    "use server";
+    await signOut({ redirectTo: "/" });
+  }
+
+  return (
+    // 2. Bind action to form
+    <form action={signOutAction}>
+      <button className="...">
+        <ArrowRightOnRectangleIcon />
+        <span>Sign out</span>
+      </button>
+    </form>
+  );
+}
+
+export default SignOutButton;
+```
+
+---
+
+### **5. What Happens at Runtime**
+
+#### **Before Clicking**
+
+* User is authenticated
+* UI shows profile image / user info
+* “Sign out” button is visible
+
+#### **After Clicking**
+
+1. Form submits to the server
+2. `signOut()` destroys the session
+3. User is redirected (or page refreshes)
+4. UI re-renders automatically
+5. App switches back to **Guest mode**
+
+   * Profile image disappears
+   * “Sign in” button reappears
+
+No manual state updates required.
+
+---
+
+### **6. Icon Choice (UX Detail)**
+
+The transcript uses:
+
+```
+ArrowRightOnRectangleIcon
+```
+
+from **Heroicons (`24/solid`)**
+
+This visually communicates:
+
+* Exit
+* Logout
+* Leaving a protected area
+
+A small touch, but excellent UX clarity.
+
+---
+
+### **Key Takeaways**
+
+* Sign-out uses the **same Server Action pattern** as sign-in
+* Forms replace click handlers in Server Components
+* Session state updates automatically after sign-out
+* No client-side auth logic is needed
+
+---
+
+### **Mental Model**
+
+> **Auth actions = server-only, form-triggered, stateless**
+
+Once you accept that model, custom auth UI becomes trivial.
+
+---
