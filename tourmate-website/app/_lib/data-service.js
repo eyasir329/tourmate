@@ -164,7 +164,6 @@ export async function createGuest(newGuest) {
     console.error(error);
     throw new Error("Guest could not be created");
   }
-
   return data;
 }
 

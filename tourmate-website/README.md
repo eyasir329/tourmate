@@ -1384,3 +1384,226 @@ A small touch, but excellent UX clarity.
 Once you accept that model, custom auth UI becomes trivial.
 
 ---
+
+## **Creating a New Guest on First Sign-In (NextAuth + Supabase)**
+
+### **1. The Goal: Sync Authentication With Your Database**
+
+NextAuth (Auth.js) handles **who the user is**, but it has **no idea** about your application’s domain data.
+
+In your case:
+
+* You have a `guests` table in Supabase
+* Bookings, cabins, etc. must reference a `guestId`
+* Google only gives you an email and name
+
+#### **The Core Problem**
+
+> A user can be authenticated, but still not exist in your database.
+
+#### **The Solution**
+
+Hook into the authentication lifecycle to:
+
+1. **Create a guest record on first sign-in**
+2. **Expose the database `guestId` inside the session**
+
+---
+
+## **2. Step 1 — `signIn` Callback (Write Operation)**
+
+The **`signIn` callback** is where you handle **side effects** like database creation.
+
+### **When It Runs**
+
+* After successful provider authentication (Google)
+* Before the session is finalized
+* Acts as an allow/deny gate
+
+---
+
+### **Responsibilities of `signIn`**
+
+* Check *how* the user logged in
+* Create missing database records
+* Decide whether login is allowed
+
+---
+
+### **Logic Flow**
+
+1. Verify the provider (`google`)
+2. Extract user data (`name`, `email`)
+3. Check if the guest already exists
+4. Create the guest **only if missing**
+5. Return `true` or `false`
+
+---
+
+### **Implementation**
+
+```js
+callbacks: {
+  async signIn({ user, account }) {
+    try {
+      if (account.provider === "google") {
+        const { name, email } = user;
+
+        // Check if guest exists
+        const existingGuest = await getGuest(email);
+
+        // Create guest on first login
+        if (!existingGuest) {
+          await createGuest({
+            email,
+            fullName: name,
+          });
+        }
+      }
+
+      return true; // allow login
+    } catch {
+      return false; // deny login if DB fails
+    }
+  },
+}
+```
+
+✔ Runs once per sign-in
+✔ Handles **writes only**
+
+---
+
+## **3. Step 2 — `session` Callback (Read Operation)**
+
+Creating the guest is not enough.
+
+Your **React components** still need access to:
+
+```
+guest.id
+```
+
+That’s what the **`session` callback** is for.
+
+---
+
+### **When It Runs**
+
+* Every time `auth()` or `useSession()` is called
+* Frequently
+* Used to shape the session object sent to the app
+
+---
+
+### **Logic Flow**
+
+1. Read the user’s email from the session
+2. Fetch the guest from the database
+3. Attach the database ID to the session
+4. Return the enriched session
+
+---
+
+### **Implementation**
+
+```js
+async session({ session }) {
+  const guest = await getGuest(session.user.email);
+
+  // Attach DB ID to session
+  session.user.guestId = guest.id;
+
+  return session;
+}
+```
+
+Now anywhere in the app you can do:
+
+```js
+session.user.guestId
+```
+
+Perfect for:
+
+* Creating bookings
+* Linking reservations
+* Enforcing ownership
+
+---
+
+## **4. Why This Must Be Two Separate Steps**
+
+This is the key conceptual takeaway from the transcript.
+
+### ❓ *Why not just attach the ID in `signIn`?*
+
+Because:
+
+* `signIn` controls **permission**
+* `session` controls **context**
+
+They serve different purposes.
+
+---
+
+### **Separation of Concerns**
+
+| Callback  | Purpose               | Frequency      |
+| --------- | --------------------- | -------------- |
+| `signIn`  | Write / Create        | Once per login |
+| `session` | Read / Attach context | Many times     |
+
+* `signIn` → *side effects*
+* `session` → *global state*
+
+Trying to mix them causes bugs and missing data.
+
+---
+
+## **5. Final `auth.js` Summary**
+
+```js
+export const { auth, handlers, signIn, signOut } = NextAuth({
+  callbacks: {
+    async signIn({ user, account }) {
+      try {
+        if (account.provider === "google") {
+          const existingGuest = await getGuest(user.email);
+
+          if (!existingGuest) {
+            await createGuest({
+              email: user.email,
+              fullName: user.name,
+            });
+          }
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    },
+
+    async session({ session }) {
+      const guest = await getGuest(session.user.email);
+      session.user.guestId = guest.id;
+      return session;
+    },
+  },
+});
+```
+
+---
+
+## **Mental Model to Lock In**
+
+> **Auth identifies the user — your database defines who they are in your app**
+
+Once you internalize that:
+
+* First login = create domain record
+* Every session = attach domain context
+
+Everything else falls into place.
+
+---
