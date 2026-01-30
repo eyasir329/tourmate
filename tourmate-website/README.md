@@ -771,3 +771,161 @@ You didn’t write **any redirect logic** — Auth.js handles it.
 This is the **canonical, production-grade Next.js auth setup** in 2025.
 
 ---
+
+## **What is Middleware in Next.js**
+
+![img](https://i.ibb.co.com/bRyYgFtm/Screenshot-from-2026-01-31-02-11-40.png)
+
+### **1. What is Middleware?**
+
+Middleware is a function that executes **before a request reaches a route handler or page component** in Next.js.
+
+Think of it as a **gatekeeper** that sits between:
+
+```
+User Request → Middleware → Page / API Route → Response
+```
+
+Because it runs *before* rendering or data fetching, middleware is ideal for **early decision-making**—such as blocking, redirecting, or modifying requests.
+
+---
+
+### **2. How Middleware Works (Request Flow)**
+
+When a user visits a route (for example, `/account`), the request is intercepted by middleware first.
+
+At this stage, middleware can do one of four things:
+
+#### **1. Allow the request to continue**
+
+```js
+NextResponse.next()
+```
+
+The request proceeds normally to the page or route handler.
+
+---
+
+#### **2. Redirect the user**
+
+```js
+NextResponse.redirect()
+```
+
+The user is sent to a **different URL**, and the browser URL changes
+(e.g., redirecting unauthenticated users to `/login`).
+
+---
+
+#### **3. Rewrite the request**
+
+```js
+NextResponse.rewrite()
+```
+
+The user sees content from another route **without changing the URL**.
+
+Common use cases:
+
+* A/B testing
+* Legacy URL support
+* Locale-based routing
+
+---
+
+#### **4. Send a response directly**
+
+```js
+NextResponse.json()
+```
+
+Middleware can completely **short-circuit the request** and return a response without rendering any page.
+
+---
+
+### **3. Implementing Middleware**
+
+#### **A. File Placement**
+
+Middleware must follow strict conventions:
+
+* **Filename:** `middleware.js` (or `middleware.ts`)
+* **Location:**
+
+  * Project root, **or**
+  * Inside `src/` if your app uses a `src` directory
+
+🚫 It **does not** go inside the `app/` folder.
+
+---
+
+#### **B. Basic Middleware Structure**
+
+```js
+import { NextResponse } from "next/server";
+
+export function middleware(request) {
+  return NextResponse.redirect(new URL("/about", request.url));
+}
+```
+
+**Key points:**
+
+* The function receives a `request` object
+* `request.url` provides the full URL (used to build absolute redirects)
+* `NextResponse` is used for redirects, rewrites, and responses
+
+---
+
+### **4. Route Matching (Critical for Performance)**
+
+By default, middleware runs on **every request**, including:
+
+* Images
+* Fonts
+* Static files
+* API calls
+
+This is inefficient.
+
+To limit where middleware runs, use a **matcher configuration**.
+
+```js
+export const config = {
+  matcher: ["/account", "/cabins"],
+};
+```
+
+✅ Middleware will now run **only** for these routes
+🚀 This significantly improves performance
+
+---
+
+### **5. Primary Use Case: Authorization**
+
+The most common real-world use of middleware is **authentication & authorization**.
+
+Instead of repeating login checks in every page:
+
+* You check authentication **once** in middleware
+* Unauthorized users are redirected immediately
+* Authorized users proceed normally
+
+This approach is:
+
+* Cleaner
+* More secure
+* Easier to maintain
+* Less error-prone
+
+---
+
+### **Mental Model to Remember**
+
+> **Middleware = global, early, request-level logic**
+
+If something should happen **before** a page loads
+→ middleware is the right place
+
+---
+
