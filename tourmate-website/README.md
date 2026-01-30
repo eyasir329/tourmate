@@ -1081,3 +1081,167 @@ If a route must be protected:
 * Let NextAuth handle the rest
 
 ---
+
+## **Building a Custom Sign-In Page (NextAuth v5 + Server Actions)**
+
+### **1. The Goal: A Better Sign-In UX**
+
+By default, NextAuth ships with a very basic sign-in page at:
+
+```
+/api/auth/signin
+```
+
+While functional, it:
+
+* Is unstyled
+* Doesn’t match your app’s design
+* Offers limited UX control
+
+The goal is to **replace this page entirely** with a custom route such as:
+
+```
+/login
+```
+
+that integrates seamlessly with your application’s UI.
+
+---
+
+### **2. Telling NextAuth to Use Your Custom Page**
+
+This is done inside your **`auth.js`** configuration.
+
+#### **The `pages` Option**
+
+NextAuth allows you to override built-in pages via the `pages` object.
+
+```js
+export const { auth, handlers, signIn, signOut } = NextAuth({
+  // providers, callbacks, etc.
+  pages: {
+    signIn: "/login",
+  },
+});
+```
+
+#### **What This Changes**
+
+* Middleware redirects unauthenticated users to `/login`
+* Calling `signIn()` without arguments sends users to `/login`
+* `/api/auth/signin` is no longer used for UI
+
+NextAuth still handles authentication — you’re only replacing the **interface**.
+
+---
+
+### **3. Implementing Sign-In Using Server Actions**
+
+In the App Router, the cleanest way to trigger authentication from a server component is with **Server Actions**.
+
+---
+
+### **A. The Constraint (Important)**
+
+Server Components:
+
+* ❌ Cannot use `onClick`
+* ❌ Cannot attach client event handlers
+
+So this will **not work**:
+
+```jsx
+<button onClick={signIn}>Sign in</button>
+```
+
+---
+
+### **B. The Solution: Forms + Server Actions**
+
+HTML forms can submit directly to **server functions**, which makes them perfect for authentication.
+
+#### **Steps**
+
+1. Import `signIn` from your NextAuth config
+2. Create an async Server Action
+3. Call `signIn(provider, options)`
+4. Bind the action to a `<form>`
+
+---
+
+### **C. Example: Google Sign-In Button**
+
+```js
+import { signIn } from "@/auth";
+
+export default function SignInButton() {
+  return (
+    <form
+      action={async () => {
+        "use server";
+        await signIn("google", { redirectTo: "/account" });
+      }}
+    >
+      <button type="submit">Sign in with Google</button>
+    </form>
+  );
+}
+```
+
+#### **What’s Happening Here**
+
+* `"use server"` marks this function as a Server Action
+* The form submission triggers the action
+* `signIn("google")` starts the OAuth flow
+* `redirectTo` defines where the user lands after login
+
+No client JavaScript needed.
+
+---
+
+### **4. Avoiding the Infinite Redirect Trap**
+
+This is a **very common pitfall**.
+
+#### **The Problem**
+
+If your middleware protects **every route**, including `/login`:
+
+* User tries to visit `/login`
+* Middleware sees they’re unauthenticated
+* Middleware redirects them to `/login`
+* 🔁 Infinite loop
+
+---
+
+### **The Fix: Exclude the Login Route**
+
+Make sure `/login` is **not** part of your middleware matcher.
+
+```js
+// middleware.js
+export const config = {
+  matcher: ["/account", "/about"],
+};
+```
+
+Unauthenticated users must be allowed to access `/login`.
+
+---
+
+### **Key Takeaways**
+
+* `pages.signIn` replaces the default NextAuth UI
+* Server Actions are the correct way to trigger auth in Server Components
+* Forms replace `onClick` in the App Router
+* Middleware must **not** protect the login page
+
+---
+
+### **Mental Model**
+
+> **NextAuth handles auth logic — you control the UI**
+
+Once you internalize that, custom auth flows become simple and predictable.
+
+---
