@@ -275,3 +275,90 @@ If login itself fails:
 
 - Confirm Google OAuth redirect URI is exactly `http://localhost:3000/api/auth/callback/google`.
 - Confirm `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, and `AUTH_SECRET` are present.
+
+Nice, this is the **scene-setting lecture** — short, but it frames *everything* that follows. I’ll tighten it into a **clean, course-ready overview** that clearly signals *why this section matters* and *what skills you’re about to unlock*.
+
+---
+
+## **Interactivity & Mutations**
+
+### **1. The Big Shift: From Read-Only to Interactive**
+
+Up to now, the application has been **read-only**:
+
+* Cabins are fetched
+* Data is displayed
+* Nothing changes on the server
+
+This section marks a major transition.
+
+👉 You’ll start **mutating data** — creating, updating, and deleting records — using **Server Actions**, which are the modern, recommended way to handle mutations in the **React Server Components** model.
+
+---
+
+### **2. Core Concept: Server Actions**
+
+Server Actions allow you to:
+
+* Run server-side logic directly from React components
+* Mutate the database securely
+* Avoid traditional API routes for most use cases
+* Keep your app fast, simple, and type-safe
+
+They are the foundation for all interactivity in this section.
+
+---
+
+### **3. Real Features You’ll Build**
+
+Using Server Actions, you’ll implement real, production-grade functionality:
+
+* **Reserve a cabin**
+  Create new bookings tied to authenticated users
+
+* **Manage reservations**
+  Update or delete existing bookings
+
+* **Profile management**
+  Allow users to update their personal information
+
+These are not toy examples — they mirror how modern Next.js apps work in the real world.
+
+---
+
+### **4. Advanced React Hooks for Great UX**
+
+To make mutations feel instant and smooth, the section introduces several modern React hooks:
+
+* **`useFormStatus`**
+  Track pending form submissions (loading, disabled buttons, spinners)
+
+* **`useTransition`**
+  Perform non-blocking state updates without freezing the UI
+
+* **`useOptimistic`**
+  Show immediate UI updates *before* the server confirms the change (optimistic UI)
+
+Together, these hooks help you build apps that feel fast—even when the server is doing real work.
+
+---
+
+### **5. Why This Section Matters**
+
+By the end of this section, you’ll understand how to:
+
+* Mutate data without API routes
+* Build forms that submit directly to the server
+* Handle loading, success, and error states cleanly
+* Create modern, responsive UX with Server Components
+
+---
+
+### **Mental Model**
+
+> **Data fetching shows information.
+> Server Actions change the world.**
+
+This section is where your app stops being a brochure and starts being a **real product**.
+
+---
