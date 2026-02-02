@@ -579,3 +579,159 @@ Once you understand them:
 That’s the mindset this section is building.
 
 ---
+
+### 1. Server → Client architecture
+
+* ✔️ Data fetching **must happen in a Server Component**
+* ✔️ Interactive form **must be a Client Component**
+* ✔️ Passing the full `guest` object as a prop is intentional and correct
+
+This is the *canonical* Next.js App Router pattern.
+
+---
+
+### 2. `page.js` responsibilities
+
+You nailed this:
+
+* ✔️ `auth()` to get the session
+* ✔️ `getGuest(session.user.email)` to fetch the full profile
+* ✔️ Passing `guest` down to the form
+
+> ⚠️ Important nuance (you already hinted at it):
+>
+> Even if the session stores `guestId`, **this page still needs the full guest object**, so fetching again is correct.
+
+---
+
+### 3. Form pre-filling using `defaultValue`
+
+Spot on.
+
+* ✔️ `defaultValue` is the right choice (not `value`)
+* ✔️ Keeps inputs uncontrolled
+* ✔️ Avoids unnecessary client state
+
+This is *exactly* how Server → Client forms should work.
+
+---
+
+### 4. Editable vs Read-only fields
+
+Correct interpretation of the business rules:
+
+| Field       | Editable |
+| ----------- | -------- |
+| Full Name   | ❌        |
+| Email       | ❌        |
+| Nationality | ✅        |
+| National ID | ✅        |
+
+---
+
+## ⚠️ What’s Missing (But Required in the Transcript)
+
+The transcript **does not stop at rendering**.
+This page exists **only because a Server Action will update the profile**.
+
+So there are **three critical pieces missing** from your breakdown.
+
+---
+
+## 🔴 1. The Server Action (Core of the Feature)
+
+There **must** be a server action like this:
+
+```js
+'use server';
+
+export async function updateProfile(formData) {
+  const session = await auth();
+
+  if (!session) throw new Error('Not authenticated');
+
+  const nationalID = formData.get('nationalID');
+  const nationality = formData.get('nationality');
+
+  await updateGuest(session.user.email, {
+    nationalID,
+    nationality,
+  });
+
+  revalidatePath('/account/profile');
+}
+```
+
+👉 Without this, the form does nothing.
+
+---
+
+## 🔴 2. The Form Must Use `action={updateProfile}`
+
+Your form currently has no submission logic.
+
+Correct version:
+
+```jsx
+<form action={updateProfile}>
+```
+
+This is **the whole point** of “Updating the Profile Using a Server Action”.
+
+No `onSubmit`, no API route, no client fetch.
+
+---
+
+## 🔴 3. Inputs Must Have `name` Attributes
+
+Server Actions read from `FormData`.
+
+So these are required:
+
+```jsx
+<input name="nationalID" defaultValue={nationalID} />
+
+<SelectCountry name="nationality" defaultCountry={guest.nationality} />
+```
+
+Without `name`, `formData.get()` returns `null`.
+
+---
+
+## ✅ Corrected Mental Model (Very Important)
+
+Think of it like this:
+
+```
+Server Page
+ ├── fetch session
+ ├── fetch guest
+ └── render Client Form with default data
+        ├── user edits fields
+        └── submit → Server Action
+                ├── re-authenticate
+                ├── update DB
+                └── revalidate page
+```
+
+This is **pure App Router philosophy**:
+
+* No API routes
+* No client fetching
+* No state syncing
+
+---
+
+## 🧠 Final Verdict
+
+Your explanation is:
+
+* **Accurate**
+* **Well-structured**
+* **Faithful to the transcript**
+
+But it is **incomplete** without:
+
+* the **Server Action**
+* the **form action**
+* the **input `name`s**
