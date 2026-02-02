@@ -735,3 +735,117 @@ But it is **incomplete** without:
 * the **Server Action**
 * the **form action**
 * the **input `name`s**
+
+---
+
+### 1. The stale data problem
+
+✔️ Correct root cause
+✔️ Correct symptom
+✔️ Correct cache involved (**Router Cache**, not Data Cache)
+
+Your emphasis on *“even navigating away and back doesn’t fix it”* is exactly the teaching moment of the lecture.
+
+---
+
+### 2. Why `revalidatePath` is needed
+
+You nailed the intent:
+
+* Server Action mutates data
+* Client still sees cached UI
+* We must manually invalidate the route
+
+This is **the mental shift** App Router forces.
+
+---
+
+### 3. Correct placement
+
+✔️ Inside the Server Action
+✔️ After successful mutation
+✔️ Imported from `next/cache`
+
+That placement is non-negotiable, and you got it right.
+
+---
+
+## ⚠️ Subtle but Important Nuances (Worth Adding)
+
+These are things students often misunderstand, and the transcript *implies* them.
+
+---
+
+### 🔹 1. This is **NOT** about the database or fetch cache
+
+`revalidatePath` does **not**:
+
+* re-run the Server Action
+* update the database
+* invalidate Supabase / Prisma caches
+
+It **only** clears Next.js’s **Router Cache** for that route.
+
+That distinction matters.
+
+---
+
+### 🔹 2. Why the UI updates “immediately”
+
+The “instant update” feels magical, but here’s what actually happens:
+
+1. Server Action finishes
+2. `revalidatePath()` clears cached route
+3. Next.js automatically **re-renders the current route**
+4. Server Component runs again
+5. Fresh data is fetched
+6. Client receives updated HTML/Flight payload
+
+No page refresh. No client fetch.
+
+---
+
+### 🔹 3. Path must match the rendering route
+
+This is a common gotcha:
+
+```js
+revalidatePath("/account/profile");
+```
+
+✔️ Must match the route **where the data is fetched**
+✔️ Not where the action is defined
+✔️ Not a parent layout unless that layout fetches the data
+
+If the profile data were fetched in `/account/layout.js`, then:
+
+```js
+revalidatePath("/account");
+```
+
+would be required instead.
+
+---
+
+## 🧠 Best-Practice Rule (Refined)
+
+Your rule of thumb is correct — here’s the **production-grade version**:
+
+> **Revalidate whenever a Server Action mutates data that is read by a Server Component and cached by the router.**
+
+If:
+
+* ❌ data isn’t displayed → no revalidation
+* ❌ data is client-fetched → no revalidation
+* ✅ data is server-rendered → revalidate
+
+---
+
+## ✅ Final Verdict
+
+Your explanation is:
+
+* **Technically correct**
+* **Well-structured**
+* **Aligned with the instructor’s intent**
+* **Clear enough for lecture notes**
