@@ -286,9 +286,9 @@ Nice, this is the **scene-setting lecture** — short, but it frames *everything
 
 Up to now, the application has been **read-only**:
 
-* Cabins are fetched
-* Data is displayed
-* Nothing changes on the server
+- Cabins are fetched
+- Data is displayed
+- Nothing changes on the server
 
 This section marks a major transition.
 
@@ -300,10 +300,10 @@ This section marks a major transition.
 
 Server Actions allow you to:
 
-* Run server-side logic directly from React components
-* Mutate the database securely
-* Avoid traditional API routes for most use cases
-* Keep your app fast, simple, and type-safe
+- Run server-side logic directly from React components
+- Mutate the database securely
+- Avoid traditional API routes for most use cases
+- Keep your app fast, simple, and type-safe
 
 They are the foundation for all interactivity in this section.
 
@@ -313,13 +313,13 @@ They are the foundation for all interactivity in this section.
 
 Using Server Actions, you’ll implement real, production-grade functionality:
 
-* **Reserve a cabin**
+- **Reserve a cabin**
   Create new bookings tied to authenticated users
 
-* **Manage reservations**
+- **Manage reservations**
   Update or delete existing bookings
 
-* **Profile management**
+- **Profile management**
   Allow users to update their personal information
 
 These are not toy examples — they mirror how modern Next.js apps work in the real world.
@@ -330,13 +330,13 @@ These are not toy examples — they mirror how modern Next.js apps work in the r
 
 To make mutations feel instant and smooth, the section introduces several modern React hooks:
 
-* **`useFormStatus`**
+- **`useFormStatus`**
   Track pending form submissions (loading, disabled buttons, spinners)
 
-* **`useTransition`**
+- **`useTransition`**
   Perform non-blocking state updates without freezing the UI
 
-* **`useOptimistic`**
+- **`useOptimistic`**
   Show immediate UI updates *before* the server confirms the change (optimistic UI)
 
 Together, these hooks help you build apps that feel fast—even when the server is doing real work.
@@ -347,10 +347,10 @@ Together, these hooks help you build apps that feel fast—even when the server 
 
 By the end of this section, you’ll understand how to:
 
-* Mutate data without API routes
-* Build forms that submit directly to the server
-* Handle loading, success, and error states cleanly
-* Create modern, responsive UX with Server Components
+- Mutate data without API routes
+- Build forms that submit directly to the server
+- Handle loading, success, and error states cleanly
+- Create modern, responsive UX with Server Components
 
 ---
 
@@ -376,20 +376,19 @@ They act as a **direct bridge** between your interface and your backend logic.
 ![img](https://i.ibb.co.com/CZhFvkh/Screenshot-from-2026-01-31-06-19-16.png)
 ![img](https://i.ibb.co.com/q6HnKwW/Screenshot-from-2026-01-31-06-43-36.png)
 
-
 ---
 
 ### **Core Purpose**
 
 Server Actions are designed primarily for:
 
-* **Data mutations**
+- **Data mutations**
 
-  * Create
-  * Update
-  * Delete
-* **Form submissions**
-* **Secure server-side logic**
+  - Create
+  - Update
+  - Delete
+- **Form submissions**
+- **Secure server-side logic**
 
 They replace the traditional “API route + fetch” pattern for most use cases.
 
@@ -405,9 +404,9 @@ Here’s what Next.js does for you automatically:
 
 When you define a Server Action:
 
-* Next.js generates an internal API endpoint
-* You never write `route.js`
-* You never call `fetch`
+- Next.js generates an internal API endpoint
+- You never write `route.js`
+- You never call `fetch`
 
 This API is invisible, managed, and optimized by the framework.
 
@@ -417,10 +416,10 @@ This API is invisible, managed, and optimized by the framework.
 
 When the action is invoked:
 
-* A standard **HTTP POST request** is sent
-* The function arguments are included in the request body
-* The server executes the function
-* The result is streamed back to React
+- A standard **HTTP POST request** is sent
+- The function arguments are included in the request body
+- The server executes the function
+- The result is streamed back to React
 
 ---
 
@@ -428,9 +427,9 @@ When the action is invoked:
 
 Because arguments travel over the network:
 
-* They **must be serializable**
-* Plain objects, strings, numbers, arrays are fine
-* Functions, class instances, DOM nodes are not
+- They **must be serializable**
+- Plain objects, strings, numbers, arrays are fine
+- Functions, class instances, DOM nodes are not
 
 ---
 
@@ -447,8 +446,8 @@ Because arguments travel over the network:
 
 **With Server Actions:**
 
-* Write one function
-* Call it directly
+- Write one function
+- Call it directly
 
 Less boilerplate.
 Less duplication.
@@ -462,15 +461,15 @@ Server Actions work seamlessly with **plain HTML forms**.
 
 That means:
 
-* Forms work even if JavaScript fails
-* Submissions still reach the server
-* When hydration completes, the UI upgrades automatically
+- Forms work even if JavaScript fails
+- Submissions still reach the server
+- When hydration completes, the UI upgrades automatically
 
 This gives you:
 
-* Better accessibility
-* Better reliability
-* Better UX on slow networks
+- Better accessibility
+- Better reliability
+- Better UX on slow networks
 
 ---
 
@@ -478,15 +477,15 @@ This gives you:
 
 Because:
 
-* Client and server live in the same project
-* Functions are shared
-* Types are inferred end-to-end
+- Client and server live in the same project
+- Functions are shared
+- Types are inferred end-to-end
 
 You get:
 
-* Compile-time safety
-* No mismatched request/response shapes
-* No duplicated DTOs
+- Compile-time safety
+- No mismatched request/response shapes
+- No duplicated DTOs
 
 This is very hard to achieve with traditional APIs.
 
@@ -500,24 +499,24 @@ Server Actions are **real backend functions**.
 
 Inside them, you can:
 
-* **Mutate the database**
+- **Mutate the database**
 
-  * Insert, update, delete records
+  - Insert, update, delete records
 
-* **Revalidate cached data**
+- **Revalidate cached data**
 
-  * `revalidatePath()`
-  * `revalidateTag()`
-  * Instantly update the UI after a mutation
+  - `revalidatePath()`
+  - `revalidateTag()`
+  - Instantly update the UI after a mutation
 
-* **Redirect the user**
+- **Redirect the user**
 
-  * `redirect("/account")`
+  - `redirect("/account")`
 
-* **Access cookies**
+- **Access cookies**
 
-  * Read auth/session cookies
-  * Set preferences
+  - Read auth/session cookies
+  - Set preferences
 
 They run with full server privileges.
 
@@ -529,25 +528,25 @@ Although most commonly seen in forms, Server Actions are flexible.
 
 You can use them in:
 
-* **Forms**
+- **Forms**
 
   ```jsx
   <form action={myAction}>
   ```
 
-* **Event handlers**
+- **Event handlers**
 
   ```js
   onClick={async () => await myAction()}
   ```
 
-* **Hooks**
+- **Hooks**
 
   ```js
   useEffect(() => { myAction(); }, []);
   ```
 
-* **Third-party libraries**
+- **Third-party libraries**
   Anywhere a function is accepted
 
 They are not limited to forms — forms are just the most common and ergonomic case.
@@ -560,10 +559,10 @@ They are not limited to forms — forms are just the most common and ergonomic c
 
 They:
 
-* Feel like local functions
-* Behave like secure APIs
-* Eliminate boilerplate
-* Enable modern UX patterns
+- Feel like local functions
+- Behave like secure APIs
+- Eliminate boilerplate
+- Enable modern UX patterns
 
 ---
 
@@ -573,8 +572,8 @@ Server Actions blur the line between frontend and backend — *on purpose*.
 
 Once you understand them:
 
-* You stop thinking in terms of API endpoints
-* You start thinking in terms of **user intent + server logic**
+- You stop thinking in terms of API endpoints
+- You start thinking in terms of **user intent + server logic**
 
 That’s the mindset this section is building.
 
@@ -582,9 +581,9 @@ That’s the mindset this section is building.
 
 ### 1. Server → Client architecture
 
-* ✔️ Data fetching **must happen in a Server Component**
-* ✔️ Interactive form **must be a Client Component**
-* ✔️ Passing the full `guest` object as a prop is intentional and correct
+- ✔️ Data fetching **must happen in a Server Component**
+- ✔️ Interactive form **must be a Client Component**
+- ✔️ Passing the full `guest` object as a prop is intentional and correct
 
 This is the *canonical* Next.js App Router pattern.
 
@@ -594,9 +593,9 @@ This is the *canonical* Next.js App Router pattern.
 
 You nailed this:
 
-* ✔️ `auth()` to get the session
-* ✔️ `getGuest(session.user.email)` to fetch the full profile
-* ✔️ Passing `guest` down to the form
+- ✔️ `auth()` to get the session
+- ✔️ `getGuest(session.user.email)` to fetch the full profile
+- ✔️ Passing `guest` down to the form
 
 > ⚠️ Important nuance (you already hinted at it):
 >
@@ -608,9 +607,9 @@ You nailed this:
 
 Spot on.
 
-* ✔️ `defaultValue` is the right choice (not `value`)
-* ✔️ Keeps inputs uncontrolled
-* ✔️ Avoids unnecessary client state
+- ✔️ `defaultValue` is the right choice (not `value`)
+- ✔️ Keeps inputs uncontrolled
+- ✔️ Avoids unnecessary client state
 
 This is *exactly* how Server → Client forms should work.
 
@@ -716,9 +715,9 @@ Server Page
 
 This is **pure App Router philosophy**:
 
-* No API routes
-* No client fetching
-* No state syncing
+- No API routes
+- No client fetching
+- No state syncing
 
 ---
 
@@ -726,15 +725,15 @@ This is **pure App Router philosophy**:
 
 Your explanation is:
 
-* **Accurate**
-* **Well-structured**
-* **Faithful to the transcript**
+- **Accurate**
+- **Well-structured**
+- **Faithful to the transcript**
 
 But it is **incomplete** without:
 
-* the **Server Action**
-* the **form action**
-* the **input `name`s**
+- the **Server Action**
+- the **form action**
+- the **input `name`s**
 
 ---
 
@@ -752,9 +751,9 @@ Your emphasis on *“even navigating away and back doesn’t fix it”* is exact
 
 You nailed the intent:
 
-* Server Action mutates data
-* Client still sees cached UI
-* We must manually invalidate the route
+- Server Action mutates data
+- Client still sees cached UI
+- We must manually invalidate the route
 
 This is **the mental shift** App Router forces.
 
@@ -780,9 +779,9 @@ These are things students often misunderstand, and the transcript *implies* them
 
 `revalidatePath` does **not**:
 
-* re-run the Server Action
-* update the database
-* invalidate Supabase / Prisma caches
+- re-run the Server Action
+- update the database
+- invalidate Supabase / Prisma caches
 
 It **only** clears Next.js’s **Router Cache** for that route.
 
@@ -835,9 +834,9 @@ Your rule of thumb is correct — here’s the **production-grade version**:
 
 If:
 
-* ❌ data isn’t displayed → no revalidation
-* ❌ data is client-fetched → no revalidation
-* ✅ data is server-rendered → revalidate
+- ❌ data isn’t displayed → no revalidation
+- ❌ data is client-fetched → no revalidation
+- ✅ data is server-rendered → revalidate
 
 ---
 
@@ -845,7 +844,112 @@ If:
 
 Your explanation is:
 
-* **Technically correct**
-* **Well-structured**
-* **Aligned with the instructor’s intent**
-* **Clear enough for lecture notes**
+- **Technically correct**
+- **Well-structured**
+- **Aligned with the instructor’s intent**
+- **Clear enough for lecture notes**
+
+---
+
+## **Displaying a Loading Indicator with `useFormStatus`**
+
+### **1. Why you need this**
+
+When a form triggers a Server Action (profile update, reservation change, etc.), the request can take noticeable time.
+
+Without feedback:
+
+- Users can’t tell if the submit worked
+- They may click multiple times (duplicate submissions)
+
+The UX goal is simple:
+
+- Disable the submit button while the action runs
+- Show a pending label (and optionally a spinner)
+
+---
+
+### **2. What `useFormStatus` does**
+
+`useFormStatus` (from `react-dom`) exposes the status of the *nearest parent form submission*.
+
+- `pending: boolean` → `true` while the form’s Server Action is in-flight, `false` when it completes
+
+This is the cleanest way to wire “Submitting…” UI to Server Actions because it tracks the form lifecycle automatically.
+
+---
+
+### **3. Constraints (the part that usually trips people up)**
+
+`useFormStatus` only works when:
+
+- It runs in a **Client Component** (`'use client'`)
+- The component calling it is rendered **inside** the `<form>...</form>`
+
+That’s why you generally **should not** call `useFormStatus` in the same component that *declares* the `<form>` — extract the submit button into its own child component.
+
+---
+
+### **4. Recommended pattern: a reusable `SubmitButton`**
+
+```jsx
+'use client';
+
+import { useFormStatus } from 'react-dom';
+
+export default function SubmitButton({
+  children,
+  pendingLabel = 'Working...',
+  className = '',
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-disabled={pending}
+      className={`rounded bg-primary px-4 py-2 text-primary-foreground transition disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+    >
+      <span className="inline-flex items-center gap-2">
+        {pending ? pendingLabel : children}
+        {pending ? (
+          <span
+            aria-hidden
+            className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+          />
+        ) : null}
+      </span>
+    </button>
+  );
+}
+```
+
+---
+
+### **5. Using it inside a form**
+
+```jsx
+import { updateProfileAction } from '@/app/_lib/actions';
+import SubmitButton from '@/app/_components/SubmitButton';
+
+export default function UpdateProfileForm({ guest }) {
+  return (
+    <form action={updateProfileAction}>
+      {/* inputs with name=... so FormData works */}
+      <SubmitButton pendingLabel="Updating...">Update profile</SubmitButton>
+    </form>
+  );
+}
+```
+
+---
+
+### **6. Common gotchas checklist**
+
+- If `pending` never turns `true`, check that the `<form>` uses `action={someServerAction}`.
+- Ensure the submit button component is *inside* the form tree (not alongside it).
+- Inputs must have `name` attributes if your action reads from `formData.get('...')`.
+- If you switch to manual `onSubmit` + `fetch`, `useFormStatus` won’t track that—use `useTransition`/state instead.
+
+---
