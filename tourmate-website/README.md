@@ -953,3 +953,47 @@ export default function UpdateProfileForm({ guest }) {
 - If you switch to manual `onSubmit` + `fetch`, `useFormStatus` won’t track that—use `useTransition`/state instead.
 
 ---
+
+## **Building the Guest's Reservations Page**
+
+### **1. The Goal**
+
+The objective is to create a route (likely `/account/reservations`) that displays a list of all reservations—both past and future—belonging specifically to the currently logged-in user.
+
+### **2. Data Fetching Strategy**
+
+The critical challenge here is fetching the *correct* data. You cannot simply fetch "all bookings" from the database; you need to filter them by the current user.
+
+* **The Chain of Requests:**
+1. **Get Session:** Call `auth()` to identify the logged-in user.
+2. **Identify Guest:** The session contains the user's *email*, but the bookings table is linked via the *guest ID*. You must query your `guests` table using the email to retrieve the `guestId`.
+3. **Fetch Bookings:** Create/call a specific function (e.g., `getBookings(guestId)`) that returns only the reservations associated with that ID.
+
+
+
+### **3. Handling Empty States**
+
+The UI handles the scenario where a user has no history.
+
+* **Logic:** Check the length of the `bookings` array.
+* **If Empty:** Render a helpful message with a link to the Cabins page to encourage them to start exploring.
+* **If Not Empty:** Render the list of reservations.
+
+### **4. Component Structure (`ReservationList`)**
+
+Instead of rendering a massive list directly in the `page.js` file, the transcript recommends extracting the list logic into a separate component called `ReservationList`.
+
+* **Purpose:** It accepts the `bookings` array as a prop and maps over it.
+* **Item Rendering:** For each booking, it renders a `ReservationCard` component, passing the individual booking data to it.
+
+### **5. Conditional UI Logic (Past vs. Future)**
+
+A key UX detail implemented in the `ReservationCard` is handling "actions" like **Edit** and **Delete**.
+
+* **The Rule:** Users should not be able to edit or delete a reservation that has already passed.
+* **Implementation:** Inside the card, check if the `startDate` of the booking is in the past using a helper function (e.g., `isPast(startDate)`).
+* **Result:**
+* **Future Stays:** Render the "Edit" (Pencil icon) and "Delete" (Trash icon) buttons.
+* **Past Stays:** Do not render these buttons, making the history read-only.
+
+---
