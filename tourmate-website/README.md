@@ -997,3 +997,119 @@ A key UX detail implemented in the `ReservationCard` is handling "actions" like 
 * **Past Stays:** Do not render these buttons, making the history read-only.
 
 ---
+
+## 1. Server Action: `deleteReservation`
+
+**`lib/actions.js`**
+
+```js
+"use server";
+
+import { auth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { revalidatePath } from "next/cache";
+
+export async function deleteReservation(bookingId) {
+  const session = await auth();
+
+  if (!session?.user) {
+    throw new Error("You must be logged in");
+  }
+
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, guestId")
+    .eq("id", bookingId)
+    .single();
+
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+
+  if (booking.guestId !== session.user.guestId) {
+    throw new Error("You are not allowed to delete this booking");
+  }
+
+  await supabase.from("bookings").delete().eq("id", bookingId);
+
+  revalidatePath("/account/reservations");
+}
+```
+
+### Why this matters
+
+* **Auth check** → prevents anonymous deletes
+* **Ownership check** → prevents horizontal privilege escalation
+* **Revalidation** → forces fresh data after mutation
+
+This is the *security-critical* part of the lecture.
+
+---
+
+## 2. Client Component: `DeleteReservation`
+
+**`components/DeleteReservation.jsx`**
+
+```jsx
+"use client";
+
+import { useTransition } from "react";
+import { deleteReservation } from "@/lib/actions";
+
+function DeleteReservation({ bookingId }) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleDelete() {
+    if (!confirm("Are you sure you want to delete this reservation?")) return;
+
+    startTransition(() => {
+      deleteReservation(bookingId);
+    });
+  }
+
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={isPending}
+      className="btn btn-danger"
+    >
+      {isPending ? "Deleting..." : "Delete"}
+    </button>
+  );
+}
+
+export default DeleteReservation;
+```
+
+### Key lecture takeaways reflected here
+
+* ❌ **No direct `onClick={deleteReservation}`**
+* ✅ Wrapped inside `startTransition`
+* ✅ Local pending state without blocking the page
+* ✅ Ready for `useOptimistic` in the next lecture
+
+---
+
+## 3. Mental Model (Exam / Interview Gold)
+
+> **Server Actions are NOT trusted by default.**
+> Every destructive action must re-check:
+>
+> **Who is calling it?**
+> **Do they own the resource?**
+
+Client checks ≠ security.
+Server checks = security.
+
+---
+
+## 4. What This Sets You Up For Next
+
+This exact structure is reused later for:
+
+* `useOptimistic` reservation removal
+* Toast notifications on success/failure
+* Undo patterns
+* Soft deletes vs hard deletes
+
+You’ve nailed the core idea already — this is the *correct* mental and architectural model.
