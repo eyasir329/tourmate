@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth, signIn, signOut } from "./auth";
 import { supabase } from "./supabase";
+import { getBookings } from "./data-service";
 
 export async function updateProfile(formData) {
   const session = await auth();
@@ -23,7 +24,7 @@ export async function updateProfile(formData) {
   const { data, error } = await supabase
     .from("guests")
     .update(updateData)
-    .eq("id", session.user.id)
+    .eq("id", session.user.id);
 
   if (error) {
     console.error(error);
@@ -38,13 +39,16 @@ export async function deleteReservation(bookingId) {
     throw new Error("Unauthorized");
   }
 
-  const guestBookings = await guestBookings(session.user.id);
+  const guestBookings = await getBookings(session.user.id);
   const bookingIds = guestBookings.map((booking) => booking.id);
   if (!bookingIds.includes(bookingId)) {
     throw new Error("Unauthorized");
-  } 
+  }
 
-  const { error } = await supabase.from("bookings").delete().eq("id", bookingId);
+  const { error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("id", bookingId);
 
   if (error) {
     throw new Error("Booking could not be deleted");
