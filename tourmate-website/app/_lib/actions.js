@@ -35,6 +35,9 @@ export async function updateProfile(formData) {
 }
 
 export async function deleteReservation(bookingId) {
+  // await new Promise((res) => setTimeout(res, 2000));
+  // throw new Error("Failed to delete reservation");
+
   const session = await auth();
   if (!session) {
     throw new Error("Unauthorized");

@@ -1590,3 +1590,262 @@ This challenge teaches:
 * Ownership validation patterns
 
 ---
+
+# Removing Reservations Immediately (`useOptimistic`)
+
+---
+
+# 1️⃣ The Mental Model
+
+Without optimistic UI:
+
+```
+Click → wait → server → DB → revalidate → rerender → update
+```
+
+With optimistic UI:
+
+```
+Click → UI updates immediately
+         ↓
+      server runs in background
+```
+
+Perceived latency: **0ms**
+
+---
+
+# 2️⃣ Where `useOptimistic` Must Live
+
+⚠️ Important:
+
+`useOptimistic` must live in the component that owns the list.
+
+In this case:
+
+```
+ReservationList
+```
+
+NOT inside `DeleteReservation`.
+
+Because we are modifying the **array of bookings**, not the button state.
+
+---
+
+# 3️⃣ Step A — Setup in `ReservationList`
+
+### 📄 `ReservationList.jsx`
+
+```jsx
+"use client";
+
+import { useOptimistic, useTransition } from "react";
+import { deleteReservation } from "@/lib/actions";
+import ReservationCard from "./ReservationCard";
+
+function ReservationList({ bookings }) {
+  const [isPending, startTransition] = useTransition();
+
+  // 1️⃣ Setup optimistic state
+  const [optimisticBookings, optimisticDelete] = useOptimistic(
+    bookings,
+    (currentBookings, bookingId) =>
+      currentBookings.filter((b) => b.id !== bookingId)
+  );
+
+  // 2️⃣ Combined handler
+  function handleDelete(bookingId) {
+    if (!confirm("Are you sure?")) return;
+
+    // Immediately remove from UI
+    optimisticDelete(bookingId);
+
+    // Run server action in background
+    startTransition(() => {
+      deleteReservation(bookingId);
+    });
+  }
+
+  return (
+    <ul>
+      {optimisticBookings.map((booking) => (
+        <ReservationCard
+          key={booking.id}
+          booking={booking}
+          onDelete={handleDelete}
+          isPending={isPending}
+        />
+      ))}
+    </ul>
+  );
+}
+
+export default ReservationList;
+```
+
+---
+
+# 4️⃣ Step B — Pass Down Handler
+
+### 📄 `ReservationCard.jsx`
+
+```jsx
+import DeleteReservation from "./DeleteReservation";
+
+function ReservationCard({ booking, onDelete }) {
+  return (
+    <li className="flex justify-between items-center">
+      <div>
+        <p>Cabin #{booking.cabinId}</p>
+        <p>{booking.numGuests} guests</p>
+      </div>
+
+      <DeleteReservation
+        bookingId={booking.id}
+        onDelete={onDelete}
+      />
+    </li>
+  );
+}
+
+export default ReservationCard;
+```
+
+---
+
+# 5️⃣ Step C — Delete Button Component
+
+Now it becomes very simple.
+
+It no longer calls the server directly.
+
+### 📄 `DeleteReservation.jsx`
+
+```jsx
+"use client";
+
+function DeleteReservation({ bookingId, onDelete }) {
+  return (
+    <button
+      onClick={() => onDelete(bookingId)}
+      className="text-red-600"
+    >
+      Delete
+    </button>
+  );
+}
+
+export default DeleteReservation;
+```
+
+---
+
+# 6️⃣ What Actually Happens Now
+
+When user clicks delete:
+
+1. `optimisticDelete(bookingId)`
+
+   * Immediately filters booking out
+   * UI re-renders instantly
+
+2. `deleteReservation(bookingId)`
+
+   * Server verifies ownership
+   * Deletes from DB
+   * Revalidates cache
+
+3. If everything succeeds:
+
+   * UI already matches server
+   * No visible delay
+
+---
+
+# 7️⃣ Why This Feels Instant
+
+Because we are no longer waiting for:
+
+* network
+* database
+* cache revalidation
+* rerender from server
+
+We’re modifying local state first.
+
+---
+
+# 8️⃣ What About Errors?
+
+If the server fails:
+
+* Next.js will re-render from server state
+* The deleted item reappears
+* UI self-corrects
+
+That’s why it’s called **optimistic**, not permanent.
+
+In production apps you’d add:
+
+* toast error message
+* rollback logic
+* retry
+
+But the lecture focuses on the happy path.
+
+---
+
+# 9️⃣ Important Distinction
+
+### `useTransition`
+
+Handles loading state.
+
+### `useOptimistic`
+
+Handles temporary state mutation.
+
+They solve different problems.
+
+In this pattern, we combine them:
+
+```js
+optimisticDelete(id);      // immediate UI
+startTransition(() => {
+  deleteReservation(id);   // real server action
+});
+```
+
+That’s the magic combo.
+
+---
+
+# 🔥 Why This Is Advanced
+
+You just implemented:
+
+* Local optimistic state reducer
+* Background mutation
+* Server validation
+* Cache revalidation
+* Automatic reconciliation
+
+This is the same UX pattern used in:
+
+* Twitter/X likes
+* Instagram comments
+* GitHub reactions
+* Notion block editing
+
+---
+
+# 🧠 Final Conceptual Summary
+
+| Without Optimistic | With Optimistic    |
+| ------------------ | ------------------ |
+| Wait for server    | Update immediately |
+| Perceived latency  | Zero latency       |
+| Sluggish feel      | Native-app feel    |
+
+---
