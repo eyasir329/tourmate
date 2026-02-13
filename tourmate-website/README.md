@@ -1301,3 +1301,292 @@ That’s when the UX becomes truly smooth.
 ✔ Keeps UI responsive during async work
 
 ---
+
+# Updating a Reservation
+
+# 1️⃣ Folder Structure
+
+You create:
+
+```
+app/account/reservations/edit/[bookingId]/page.js
+```
+
+This is a **dynamic route** using `bookingId`.
+
+---
+
+# 2️⃣ Step A — Server Page Component
+
+This page must:
+
+* Extract `bookingId` from `params`
+* Fetch booking
+* Fetch cabin (for maxCapacity)
+* Pass data to a Client Form
+
+---
+
+### 📄 `app/account/reservations/edit/[bookingId]/page.js`
+
+```js
+import { notFound } from "next/navigation";
+import { getBooking, getCabin } from "@/lib/data-service";
+import UpdateReservationForm from "@/components/UpdateReservationForm";
+
+export default async function Page({ params }) {
+  const { bookingId } = params;
+
+  const booking = await getBooking(bookingId);
+  if (!booking) notFound();
+
+  const cabin = await getCabin(booking.cabinId);
+
+  return (
+    <div>
+      <h2 className="text-xl font-semibold mb-6">
+        Edit Reservation #{booking.id}
+      </h2>
+
+      <UpdateReservationForm
+        booking={booking}
+        maxCapacity={cabin.maxCapacity}
+      />
+    </div>
+  );
+}
+```
+
+---
+
+## Why This Is a Server Component
+
+* It fetches secure data
+* No client JS needed here
+* Cleaner separation of concerns
+
+---
+
+# 3️⃣ Step B — Client Form Component
+
+This component:
+
+* Renders form
+* Generates guest dropdown dynamically
+* Uses `useFormStatus` for loading
+* Submits to a Server Action
+
+---
+
+### 📄 `UpdateReservationForm.jsx`
+
+```jsx
+"use client";
+
+import { updateBooking } from "@/lib/actions";
+import SubmitButton from "./SubmitButton";
+
+function UpdateReservationForm({ booking, maxCapacity }) {
+  const { id, numGuests, observations } = booking;
+
+  return (
+    <form action={updateBooking}>
+      <input type="hidden" name="bookingId" value={id} />
+
+      <div className="mb-4">
+        <label className="block mb-1">Number of guests</label>
+        <select
+          name="numGuests"
+          defaultValue={numGuests}
+          className="border px-3 py-2 w-full"
+        >
+          {Array.from({ length: maxCapacity }, (_, i) => i + 1).map(n => (
+            <option key={n} value={n}>
+              {n} guest{n > 1 && "s"}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-6">
+        <label className="block mb-1">Observations</label>
+        <textarea
+          name="observations"
+          defaultValue={observations}
+          className="border px-3 py-2 w-full"
+        />
+      </div>
+
+      <SubmitButton />
+    </form>
+  );
+}
+
+export default UpdateReservationForm;
+```
+
+---
+
+# 4️⃣ Submit Button with `useFormStatus`
+
+This only works because it is **inside a form**.
+
+---
+
+### 📄 `SubmitButton.jsx`
+
+```jsx
+"use client";
+
+import { useFormStatus } from "react-dom";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="bg-primary text-white px-4 py-2"
+    >
+      {pending ? "Updating..." : "Update Reservation"}
+    </button>
+  );
+}
+
+export default SubmitButton;
+```
+
+---
+
+# 5️⃣ Step C — Server Action
+
+This is where security matters most.
+
+---
+
+### 📄 `lib/actions.js`
+
+```js
+"use server";
+
+import { auth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+export async function updateBooking(formData) {
+  const session = await auth();
+
+  if (!session?.user) {
+    throw new Error("You must be logged in");
+  }
+
+  const bookingId = formData.get("bookingId");
+  const numGuests = Number(formData.get("numGuests"));
+  const observations = formData.get("observations");
+
+  // 1️⃣ Fetch booking for ownership check
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, guestId")
+    .eq("id", bookingId)
+    .single();
+
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+
+  // 2️⃣ Ownership verification
+  if (booking.guestId !== session.user.guestId) {
+    throw new Error("You are not allowed to update this booking");
+  }
+
+  // 3️⃣ Perform update
+  await supabase
+    .from("bookings")
+    .update({
+      numGuests,
+      observations,
+    })
+    .eq("id", bookingId);
+
+  // 4️⃣ Revalidate affected pages
+  revalidatePath("/account/reservations");
+  revalidatePath(`/account/reservations/edit/${bookingId}`);
+
+  // 5️⃣ Redirect back to list
+  redirect("/account/reservations");
+}
+```
+
+---
+
+# 🔐 Critical Security Insight
+
+Never trust:
+
+```js
+bookingId
+numGuests
+```
+
+From the client.
+
+Always:
+
+1. Authenticate
+2. Fetch booking
+3. Verify ownership
+4. THEN mutate
+
+This prevents:
+
+* Horizontal privilege escalation
+* Malicious form tampering
+* Manual API calls
+
+---
+
+# 🧠 Architecture Flow
+
+1. User clicks Edit
+2. Dynamic route loads
+3. Server fetches booking + cabin
+4. Form renders with defaults
+5. User edits
+6. Form submits to Server Action
+7. Server verifies ownership
+8. Updates DB
+9. Revalidates cache
+10. Redirects to reservations list
+
+---
+
+# 🎯 Why Only Guests + Observations?
+
+Because:
+
+* Changing dates → recalculating availability
+* Changing cabin → new pricing logic
+* Changing price → business rule violation
+
+Those require full booking recreation logic.
+
+This challenge teaches:
+
+> “Editing” ≠ “Rebuilding booking logic”
+
+---
+
+# 📌 What You Just Mastered
+
+* Dynamic routes
+* Secure server mutations
+* Form-based Server Actions
+* `useFormStatus`
+* Cache revalidation
+* Post-mutation redirect
+* Ownership validation patterns
+
+---
