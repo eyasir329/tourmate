@@ -2137,3 +2137,265 @@ No duplicated state.
 No unnecessary re-renders.
 
 ---
+
+# Creating a New Reservation
+
+# 1️⃣ The Core Problem
+
+A form only sends:
+
+```js
+formData
+```
+
+But we also need:
+
+* `cabinId`
+* `startDate`
+* `endDate`
+* `numNights`
+* `cabinPrice`
+
+These live:
+
+* In props
+* In context (`useReservation`)
+* In derived calculations
+
+The Server Action doesn’t know about them.
+
+---
+
+# 2️⃣ The Clean Solution: `.bind()`
+
+We create a new version of the server action with extra arguments pre-attached.
+
+```js
+const createBookingWithData =
+  createBooking.bind(null, bookingData);
+```
+
+Now the function signature becomes:
+
+```js
+createBooking(bookingData, formData)
+```
+
+This is the key idea.
+
+---
+
+# 3️⃣ Client Component — `ReservationForm`
+
+---
+
+### 📄 `ReservationForm.jsx`
+
+```jsx
+"use client";
+
+import { useReservation } from "@/hooks/useReservation";
+import { createBooking } from "@/lib/actions";
+import SubmitButton from "./SubmitButton";
+
+function ReservationForm({ cabin }) {
+  const { range, resetRange } = useReservation();
+
+  if (!range?.from || !range?.to) return null;
+
+  const numNights =
+    Math.abs(
+      (range.to - range.from) / (1000 * 60 * 60 * 24)
+    );
+
+  const pricePerNight = cabin.regularPrice - cabin.discount;
+  const totalPrice = numNights * pricePerNight;
+
+  // 1️⃣ Prepare invisible booking data
+  const bookingData = {
+    cabinId: cabin.id,
+    startDate: range.from,
+    endDate: range.to,
+    numNights,
+    cabinPrice: pricePerNight,
+  };
+
+  // 2️⃣ Bind to server action
+  const createBookingWithData =
+    createBooking.bind(null, bookingData);
+
+  return (
+    <form action={createBookingWithData}>
+      <div>
+        <label>Number of guests</label>
+        <select name="numGuests" required>
+          {Array.from(
+            { length: cabin.maxCapacity },
+            (_, i) => i + 1
+          ).map(n => (
+            <option key={n} value={n}>
+              {n} guest{n > 1 && "s"}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label>Observations</label>
+        <textarea name="observations" />
+      </div>
+
+      <SubmitButton />
+    </form>
+  );
+}
+
+export default ReservationForm;
+```
+
+---
+
+# 4️⃣ Server Action — `createBooking`
+
+---
+
+### 📄 `lib/actions.js`
+
+```js
+"use server";
+
+import { auth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+export async function createBooking(
+  bookingData,
+  formData
+) {
+  const session = await auth();
+
+  if (!session?.user) {
+    throw new Error("You must be logged in");
+  }
+
+  const numGuests = Number(formData.get("numGuests"));
+  const observations = formData.get("observations");
+
+  const newBooking = {
+    cabinId: bookingData.cabinId,
+    guestId: session.user.guestId,
+
+    startDate: bookingData.startDate,
+    endDate: bookingData.endDate,
+    numNights: bookingData.numNights,
+
+    cabinPrice: bookingData.cabinPrice,
+    totalPrice:
+      bookingData.numNights *
+      bookingData.cabinPrice,
+
+    numGuests,
+    observations,
+
+    status: "unconfirmed",
+    isPaid: false,
+  };
+
+  await supabase
+    .from("bookings")
+    .insert([newBooking]);
+
+  // 1️⃣ Revalidate cabin page (calendar update)
+  revalidatePath(`/cabins/${bookingData.cabinId}`);
+
+  // 2️⃣ Redirect to success page
+  redirect("/cabins/thankyou");
+}
+```
+
+---
+
+# 5️⃣ Why `.bind()` Is So Powerful
+
+Instead of:
+
+* Using hidden inputs (hacky)
+* Using global variables (bad)
+* Re-fetching everything server-side (slow)
+
+We:
+
+* Pre-attach data to the function
+* Let Next.js pass `formData` automatically
+* Keep server action clean and predictable
+
+It’s extremely elegant.
+
+---
+
+# 6️⃣ Full Flow Now
+
+1. User selects dates
+2. Pricing calculated
+3. User fills form
+4. `.bind()` attaches bookingData
+5. Server action receives:
+
+   * bookingData
+   * formData
+6. Auth check
+7. Insert booking
+8. Revalidate cabin page
+9. Redirect to thank-you
+
+The booking flow is now complete.
+
+---
+
+# 7️⃣ Important Production Considerations
+
+In real-world apps you would also:
+
+* ✅ Re-check availability server-side
+* ✅ Recalculate price server-side (never trust client math)
+* ✅ Validate `numGuests <= maxCapacity`
+* ✅ Wrap in transaction
+* ✅ Prevent double booking race conditions
+
+The lecture simplifies these for teaching clarity.
+
+---
+
+# 8️⃣ Architectural Pattern You Just Learned
+
+This pattern is used whenever:
+
+> A server mutation needs more than form input.
+
+Examples:
+
+* Checkout flows
+* Stripe payments
+* Multi-step forms
+* Admin dashboards
+* Context-driven mutations
+
+---
+
+# 🎯 What You Have Now Built
+
+You now have:
+
+* Reservation creation
+* Reservation editing
+* Reservation deletion
+* Optimistic UI
+* Date validation
+* Derived pricing
+* Secure server mutations
+* Cache revalidation
+
+That’s a full booking system.
+
+---
