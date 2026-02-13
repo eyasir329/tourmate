@@ -337,3 +337,215 @@ Common approach after a booking mutation:
   - Server: `deleteBooking` in `app/_lib/actions.js` should enforce ownership on the delete query (not just client checks).
 
 On the server, always validate and normalize inputs (dates, numbers), then insert and revalidate.
+
+
+Here’s a **complete, production-ready deployment guide** for **The Wild Oasis** using Vercel and GitHub — including the critical authentication configuration with Google Cloud Console.
+
+---
+
+# 🚀 Deploying *The Wild Oasis* to Production
+
+## 1️⃣ Push the Project to GitHub
+
+Before deployment, your code must live in a remote repository.
+
+### (Optional) Reset Git
+
+If your project was bootstrapped with `create-next-app`, it may already contain a `.git` folder. You can delete it to start fresh (optional).
+
+### Initialize & Commit
+
+```bash
+git init
+git status
+git add .
+git commit -m "first commit"
+```
+
+### Create a GitHub Repository
+
+1. Go to GitHub.
+2. Create a **Private** repository (e.g. `the-wild-oasis-website`).
+3. Copy the push commands provided by GitHub.
+
+Example:
+
+```bash
+git branch -M main
+git remote add origin https://github.com/<your-username>/the-wild-oasis-website.git
+git push -u origin main
+```
+
+Your project is now hosted on GitHub.
+
+---
+
+# 2️⃣ Deploy with Vercel
+
+Since this is a Next.js application, Vercel is the ideal deployment platform.
+
+### Import the Project
+
+1. Log in to Vercel.
+2. Click **Add New → Project**
+3. Import your GitHub repository.
+
+### Configure the Project
+
+* **Framework Preset:** Ensure **Next.js** is selected.
+* **Root Directory:** Leave default unless your app is inside a subfolder.
+
+---
+
+## 🔐 Environment Variables (Critical Step)
+
+Expand **Environment Variables** during setup.
+
+Copy the entire content of your local:
+
+```
+.env.local
+```
+
+Paste it directly into Vercel’s environment variable input.
+
+Vercel will automatically parse:
+
+```
+NEXTAUTH_URL=...
+NEXTAUTH_SECRET=...
+SUPABASE_URL=...
+SUPABASE_ANON_KEY=...
+```
+
+Then click **Deploy**.
+
+---
+
+# 3️⃣ Fix Authentication in Production
+
+After deployment, login may fail or redirect to:
+
+```
+localhost:3000
+```
+
+This happens because your auth credentials still reference your local environment.
+
+---
+
+## ✅ Step A: Update Vercel Environment Variables
+
+1. Copy your **Production URL** from Vercel, for example:
+
+```
+https://the-wild-oasis-website.vercel.app
+```
+
+2. Go to:
+
+```
+Vercel → Project → Settings → Environment Variables
+```
+
+3. Update:
+
+```
+NEXTAUTH_URL
+```
+
+Change it from:
+
+```
+http://localhost:3000
+```
+
+To:
+
+```
+https://the-wild-oasis-website.vercel.app
+```
+
+Save and **Redeploy**.
+
+---
+
+## ✅ Step B: Update Google OAuth Credentials
+
+Now update OAuth settings in Google Cloud Console.
+
+### Navigate to:
+
+```
+APIs & Services → Credentials
+```
+
+Select your **OAuth 2.0 Client ID**.
+
+---
+
+### Add Authorized JavaScript Origins
+
+Add:
+
+```
+https://the-wild-oasis-website.vercel.app
+```
+
+---
+
+### Add Authorized Redirect URI
+
+Add:
+
+```
+https://the-wild-oasis-website.vercel.app/api/auth/callback/google
+```
+
+Save changes.
+
+---
+
+# 🔄 Redeploy
+
+Return to Vercel and trigger a redeploy if necessary.
+
+Your Google login will now:
+
+* Redirect to Google
+* Authenticate successfully
+* Redirect back to your production domain
+* Create a valid session
+
+---
+
+# 🧠 What’s Actually Happening?
+
+Authentication providers (like Google) must:
+
+1. Know where your app lives
+2. Know which URLs are allowed to receive callbacks
+
+If they don’t match exactly, OAuth fails.
+
+That’s why:
+
+* `NEXTAUTH_URL`
+* Authorized Origins
+* Authorized Redirect URIs
+
+must all match your production domain exactly.
+
+---
+
+# 🎉 Final Result
+
+You now have:
+
+✅ Code hosted on GitHub
+✅ Continuous deployment via Vercel
+✅ Production environment variables configured
+✅ Working Google OAuth in production
+✅ A publicly accessible Wild Oasis website
+
+---
