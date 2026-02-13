@@ -1,241 +1,339 @@
-## Setting Up a Next.js Project (Next.js 14)
+# Tourmate Website
 
-Creating a Next.js project is very similar to initializing a React app with Vite or Create React App, but with **SSR and full-stack features enabled by default**.
+Customer-facing site for The Wild Oasis, built with Next.js 14 (App Router), Tailwind CSS, and Supabase.
+
+This README is intentionally short and practical: how to run the app, how the repo is laid out, and which env vars you need.
+
+## Table of contents
+
+- [Getting started](#getting-started)
+  - [Requirements](#requirements)
+  - [Quick start](#quick-start)
+  - [Environment variables](#environment-variables)
+- [Project guide](#project-guide)
+  - [Scripts](#scripts)
+  - [Project map](#project-map)
+  - [Routes](#routes)
+  - [Next.js notes](#nextjs-notes)
+- [API endpoints](#api-endpoints)
+- [Authentication](#authentication-authjs--supabase)
+  - [Auth flow](#auth-flow)
+  - [Where the code lives](#where-the-code-lives)
+  - [Auth environment variables](#auth-environment-variables)
+  - [Auth.js configuration](#authjs-configuration)
+  - [Route protection (middleware)](#route-protection-middleware)
+  - [Supabase guest sync](#supabase-guest-sync)
+  - [Using auth in components](#using-auth-in-components)
+  - [Troubleshooting](#troubleshooting)
+- [Interactivity & mutations](#interactivity--mutations)
+  - [Concepts](#concepts)
+  - [Server Actions 101](#server-actions-101)
+  - [Caching & revalidation](#caching--revalidation)
+  - [UX hooks](#ux-hooks)
+  - [Feature walkthroughs](#feature-walkthroughs)
+
+## Getting started
+
+### Requirements
+
+- Node.js 18+ (recommended)
+- npm
+
+### Quick start
+
+    npm install
+    npm run dev
+
+Then open <http://localhost:3000>
+
+### Environment variables
+
+Supabase is configured in app/_lib/supabase.js using:
+
+- SUPABASE_URL
+- SUPABASE_KEY
+
+Create .env.local in the project root:
+
+    SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
+    SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY"
+
+Note: keep these server-side. Do not expose service role keys to the browser.
+
+## Project guide
+
+### Scripts
+
+- npm run dev: start dev server
+- npm run build: production build
+- npm run start: start production server
+- npm run prod: build + start
+- npm run lint: run ESLint
+
+### Project map
+
+    app/
+      _components/      UI components
+      _lib/             data + Supabase client
+      _styles/          global styles
+      about/            /about
+      account/          /account (+ nested routes)
+      cabins/           /cabins (+ dynamic cabin page)
+      error.js          segment error boundary
+      loading.js        root loading UI
+      not-found.js      root 404
+      layout.js         root layout
+      page.js           /
+    public/
+
+Path alias: @/* maps to the project root (see jsconfig.json).
+
+### Routes
+
+- / -> app/page.js
+- /cabins -> app/cabins/page.js
+- /cabins/[cabinid] -> app/cabins/[cabinid]/page.js
+- /about -> app/about/page.js
+- /account -> app/account/page.js
+- /account/profile -> app/account/profile/page.js
+- /account/reservations -> app/account/reservations/page.js
+
+### Next.js notes
+
+- app/error.js and app/not-found.js control error/404 UI.
+- Use notFound() for "missing resource" flows (see getCabin() in app/_lib/data-service.js).
+- fetch() is cached by default in Server Components; opt out explicitly when you need always-fresh reads.
 
 ---
 
-## Step 1: Project Initialization
+## API endpoints
 
-To avoid version mismatches and ensure alignment with modern documentation, explicitly use **Next.js 14**.
+- `GET /api/cabins/[cabinid]` → [app/api/cabins/[cabinid]/route.js](app/api/cabins/%5Bcabinid%5D/route.js)
 
-### Command
+---
 
-```bash
-npx create-next-app@14 tourmate-website
-# npx create-next-app@latest tourmate-website
+## Authentication (Auth.js + Supabase)
+
+This project uses **Auth.js (NextAuth v5)** for Google OAuth + sessions, and **Supabase** for application data (guests, bookings, cabins).
+
+The key idea is separation of concerns:
+
+- Auth.js answers: “Who is this person?” (identity + session)
+- Supabase answers: “Who is this person *in our domain*?” (guest row + ids + bookings)
+
+### Table of contents
+
+- [Auth flow](#auth-flow)
+- [Where the code lives](#where-the-code-lives)
+- [Auth environment variables](#auth-environment-variables)
+- [Auth.js configuration](#authjs-configuration)
+- [Route protection (middleware)](#route-protection-middleware)
+- [Supabase guest sync](#supabase-guest-sync)
+- [Using auth in components](#using-auth-in-components)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+### Auth flow
+
+At a high level, the happy path looks like this:
+
+```txt
+User clicks “Continue with Google”
+  → POST Server Action (signIn)
+  → /api/auth/* handled by Auth.js
+  → Google OAuth callback
+  → callbacks.signIn() runs (optional side effects)
+  → session cookie created
+  → redirect to /account
+  → middleware checks session
+  → Server Components can call auth() for user info
 ```
 
-### Project Context
+---
 
-This project represents the **customer-facing website** for **The Wild Oasis**, where users can:
+### Where the code lives
 
-* View cabins
-* Make and manage reservations
-* Update profile information
+| Concern | File | Notes |
+| --- | --- | --- |
+| Auth config + exports | app/_lib/auth.js | Defines providers, callbacks, and exports `auth`, `signIn`, `signOut`, and route `handlers` |
+| Auth route handler | app/api/auth/[...nextauth]/route.js | Wires Auth.js handlers to Next.js route handlers |
+| Route protection | middleware.js | Uses `auth` as middleware and limits it via `matcher` |
+| Server Actions | app/_lib/actions.js | `signInAction()` and `signOutAction()` call `signIn()` / `signOut()` |
+| Supabase DB reads/writes | app/_lib/data-service.js | `getGuest()` and `createGuest()` are used by auth callbacks |
+| Supabase client | app/_lib/supabase.js | Initializes the Supabase client used by `data-service.js` |
 
 ---
 
-## Step 2: Configuration Options
+### Auth environment variables
 
-During setup, select the following options:
+Create a `.env.local` in the project root.
 
-| Option       | Choice | Reason                             |
-| ------------ | ------ | ---------------------------------- |
-| TypeScript   | ❌ No   | Keeps setup beginner-friendly      |
-| ESLint       | ✅ Yes  | Enforces code quality              |
-| Tailwind CSS | ✅ Yes  | Deeply integrated and efficient    |
-| App Router   | ✅ Yes  | Modern, recommended routing system |
-| Import Alias | ❌ No   | Defaults are sufficient            |
+| Variable | Required | Used for |
+| --- | --- | --- |
+| `AUTH_GOOGLE_ID` | Yes | Google OAuth Client ID |
+| `AUTH_GOOGLE_SECRET` | Yes | Google OAuth Client Secret |
+| `AUTH_SECRET` | Yes | Signing/cryptographic secret for Auth.js |
+| `SUPABASE_URL` | Yes | Supabase project URL |
+| `SUPABASE_KEY` | Yes | Supabase anon key (never commit service role keys) |
 
----
+Local Google OAuth redirect URI (must match in Google console):
 
-## Step 3: Project Structure Overview
-
-After installation, open the project:
-
-```bash
-code .
+```txt
+http://localhost:3000/api/auth/callback/google
 ```
 
-### Key Files & Folders
-
-#### `package.json`
-
-* Confirms Next.js is a **Node.js application**
-* Defines scripts and dependencies
-
-#### `app/`
-
-* **Core directory** for the App Router
-* Contains routes, layouts, and server components
-
-#### `public/`
-
-* Stores static assets (images, icons, fonts)
-
-#### `next.config.js`
-
-* Used for custom framework configuration
-
 ---
 
-## Step 4: Running the Development Server
+### Auth.js configuration
 
-### Command
+Auth.js is configured in app/_lib/auth.js. The exported helpers are used across the app:
 
-```bash
-npm run dev
+| Export | What it does | Where it’s used |
+| --- | --- | --- |
+| `auth` | Reads the current session (Server Components + middleware) | middleware.js, server components |
+| `signIn` | Starts OAuth login | app/_lib/actions.js |
+| `signOut` | Ends session | app/_lib/actions.js |
+| `GET/POST` handlers | Powers `/api/auth/*` endpoints | app/api/auth/[...nextauth]/route.js |
+
+Important callbacks in this repo:
+
+| Callback | Purpose | Runs when |
+| --- | --- | --- |
+| `authorized` | Authorization gate for protected routes | Every request intercepted by middleware |
+| `signIn` | Place for side effects (ex: create missing guest row) | During sign-in after provider success |
+| `session` | Enriches the session object sent to the app | Whenever `auth()` is called |
+
+Note: This repo uses a custom sign-in page:
+
+```js
+pages: {
+  signIn: "/login",
+}
 ```
 
-### Notes
+---
 
-* Development server runs at:
+### Route protection (middleware)
 
-  ```
-  http://localhost:3000
-  ```
-* `create-next-app` often initializes a **Git repository** automatically
+Routes under `/account` are protected by middleware in middleware.js:
+
+- Auth.js runs before the request reaches the page
+- If there is no session, the user is redirected to the sign-in flow
+- `matcher: ["/account"]` ensures middleware doesn’t run on every request
+
+If you protect too broadly (e.g. also protecting `/login`), you can get an infinite redirect loop.
 
 ---
 
-## Verifying Server-Side Rendering
+### Supabase guest sync
 
-To confirm SSR is working:
+Authentication (Google) does not automatically create a domain record in your database.
 
-1. Open the app in your browser
-2. View **Page Source** (not DevTools Elements)
-3. Check for content such as:
+This repo syncs a “guest” in Supabase using the `callbacks.signIn` hook:
 
-   ```html
-   <h1>...</h1>
-   ```
+1. Look up guest by email via `getGuest(email)`
+2. If not found, insert a guest row via `createGuest({ email, fullName })`
 
-   rendered directly in the HTML
+Then it enriches the session in `callbacks.session` by fetching the guest again and attaching the database id:
 
-If the content is present, the page is **server-side rendered**.
-
----
-
-## Key Takeaway
-
-> **Next.js apps render HTML on the server by default, providing fast initial loads and SEO benefits without manual SSR setup.**
-
----
-
-## Routing in Next.js (App Router)
-
-Next.js uses **file system–based routing**, removing the need for manual route configuration tools like **React Router**. Routes are created automatically based on the structure of the `app/` directory.
-
----
-
-## Core Routing Principles
-
-### 1. Folder-Based Routes
-
-* Each folder inside `app/` represents **one URL segment**.
-* Folder names map directly to the URL path.
-
----
-
-### 2. `page.js` Is Required
-
-* A folder becomes a **public route only if it contains `page.js`**.
-* Without `page.js`, the folder is ignored by the router.
-
----
-
-### 3. Default Exported Component
-
-* Every `page.js` must:
-
-  ```js
-  export default function Page() { ... }
-  ```
-* The exported component defines the UI for that route.
-
----
-
-### 4. Server Components by Default
-
-* `page.js` files are **React Server Components** unless explicitly marked with:
-
-  ```js
-  "use client";
-  ```
-* This enables SSR, data fetching, and reduced client-side JavaScript.
-
----
-
-## Defining Routes with Folder Structure
-
-| URL        | Folder Structure      |
-| ---------- | --------------------- |
-| `/`        | `app/page.js`         |
-| `/cabins`  | `app/cabins/page.js`  |
-| `/about`   | `app/about/page.js`   |
-| `/account` | `app/account/page.js` |
-
-> Folder name = URL segment
-> `page.js` = entry point for the route
-
----
-
-## Nested Routes
-
-Nested URLs are created by **nesting folders**.
-
-Example:
-
-```text
-/cabins/test
+```js
+session.user.id = guest.id;
 ```
 
-Structure:
+This gives the rest of the app a stable database identifier to associate bookings with.
 
-```text
-app/
- └─ cabins/
-     └─ test/
-         └─ page.js
-```
+#### Important note about Supabase security (RLS)
 
-Each folder adds **one path segment**.
+If your Supabase table has **Row Level Security enabled**, inserts/reads may fail unless you have policies that allow them.
 
----
+Typical options:
 
-## Developer Productivity Tips
-
-### VS Code Custom Labels
-
-* Since many files are named `page.js`, enable **Custom Labels** to display the parent folder:
-
-  ```
-  page (cabins)
-  page (about)
-  ```
-* This greatly improves navigation in large projects.
+- Create RLS policies to allow the server-side anon key to read/insert (careful!)
+- Or use a server-only Supabase client with a **service role key** (recommended for privileged inserts, but never expose it to the browser)
 
 ---
 
-### Other Reserved File Names
+### Using auth in components
 
-Next.js defines special files for common behaviors:
+This repo triggers auth using **Server Actions** (App Router friendly):
 
-| File           | Purpose                           |
-| -------------- | --------------------------------- |
-| `layout.js`    | Shared UI (headers, footers, nav) |
-| `loading.js`   | Route-level loading state         |
-| `error.js`     | Error boundary                    |
-| `not-found.js` | 404 handling                      |
+- Sign in: app/_components/SignInButton.js submits a form to `signInAction` in app/_lib/actions.js
+- Sign out: similar approach via `signOutAction`
+
+In Server Components, you can fetch the current session with `await auth()` (imported from app/_lib/auth.js).
 
 ---
 
-## Version Awareness
+### Troubleshooting
 
-This project uses **Next.js 14**.
+If a new guest is not being created in Supabase:
 
-To stay current:
+1. Check the server logs during sign-in for the error printed by `callbacks.signIn`.
+2. Verify the auth callback is actually running (ensure you’re logging in through the Auth.js flow).
+3. Confirm `SUPABASE_URL` and `SUPABASE_KEY` are set and correct.
+4. Check Supabase RLS policies on the `guests` table:
+   - Inserts may be silently blocked by RLS.
+   - Reads may return `null`, causing confusing “guest doesn’t exist” behavior.
+5. Confirm the `guests` table schema matches what you insert (column names like `email`, `fullName`).
 
-```bash
-npm install next@latest react@latest react-dom@latest eslint-config-next@latest
-```
+If login itself fails:
 
-Professional Next.js development requires **regularly checking official docs and release notes** due to rapid framework evolution.
+- Confirm Google OAuth redirect URI is exactly `http://localhost:3000/api/auth/callback/google`.
+- Confirm `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, and `AUTH_SECRET` are present.
 
----
+## Interactivity & mutations
 
-## One-Line Summary (Exam-Friendly)
+This app uses Next.js App Router + Server Actions to handle mutations (create/update/delete) without building separate REST endpoints for every form.
 
-> **In Next.js App Router, routes are defined by folders inside `app/`, and a route becomes public only when a `page.js` file is present.**
+### Concepts
 
----
+- **Mutations live on the server**: Server Actions run in a trusted environment, so they’re the right place for authorization and DB writes.
+- **Never trust client input**: validate and normalize numbers/dates/strings before inserting or updating.
+- **UI freshness is explicit**: after a mutation, revalidate the routes that render the changed data.
+
+### Server Actions 101
+
+Server Actions are async functions marked with `"use server"` (see `app/_lib/actions.js`). You can call them from forms or from Client Components.
+
+Typical pattern:
+
+1. Read data from `formData`
+2. Get the current user/session (`auth()`)
+3. Validate/normalize
+4. Write to Supabase
+5. `revalidatePath()` (and often `redirect()`)
+
+### Caching & revalidation
+
+In the App Router, data can be cached at multiple layers. If you mutate data and the UI doesn’t update, it usually means the route that renders that data wasn’t revalidated.
+
+Common approach after a booking mutation:
+
+- `revalidatePath('/account/reservations')` to refresh the reservations list
+- `revalidatePath(`/cabins/${cabinId}`)` to refresh availability/calendar
+- `redirect('/account/reservations')` to take the user back to the updated view
+
+### UX hooks
+
+| Hook | Best for | What it changes |
+| --- | --- | --- |
+| `useFormStatus` | Pending state for a `<form>` action | Disables buttons, shows loading state |
+| `useTransition` | Running async work without blocking UI | Marks state updates as non-urgent |
+| `useOptimistic` | Immediate UI updates before server confirms | Great for “feels instant” deletes/edits |
+
+### Feature walkthroughs
+
+- **Create a booking**
+  - UI: `app/_components/ReservationForm.js` submits a form to `createBooking`.
+  - State: selected dates come from `app/_components/ReservationContext.js`.
+  - Server: `createBooking` in `app/_lib/actions.js` validates inputs, inserts into `bookings`, then revalidates and redirects.
+
+- **Update a reservation**
+  - Server: `updateReservation` in `app/_lib/actions.js` validates inputs and updates the booking.
+
+- **Delete a reservation**
+  - UI: `app/_components/ReservationList.js` triggers deletion.
+  - Server: `deleteBooking` in `app/_lib/actions.js` should enforce ownership on the delete query (not just client checks).
+
+On the server, always validate and normalize inputs (dates, numbers), then insert and revalidate.
