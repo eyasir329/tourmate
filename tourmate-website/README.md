@@ -1103,13 +1103,201 @@ Server checks = security.
 
 ---
 
-## 4. What This Sets You Up For Next
+Perfect — this lecture is really about understanding **when `useFormStatus` stops working and why `useTransition` is the correct tool instead**.
 
-This exact structure is reused later for:
+Here’s a refined, production-ready breakdown with deeper intuition.
 
-* `useOptimistic` reservation removal
-* Toast notifications on success/failure
-* Undo patterns
-* Soft deletes vs hard deletes
+---
 
-You’ve nailed the core idea already — this is the *correct* mental and architectural model.
+# Another Loading Indicator: The `useTransition` Hook
+
+## 1️⃣ The Core Problem
+
+`useFormStatus()` only works:
+
+* ✅ Inside a `<form>`
+* ✅ When the Server Action is attached to `action={serverAction}`
+
+But in this case:
+
+```jsx
+<button onClick={handleDelete}>Delete</button>
+```
+
+There is **no form submission happening**.
+
+So `useFormStatus()` has no context to subscribe to.
+
+That’s why we need a different tool.
+
+---
+
+## 2️⃣ Why `useTransition` Works Here
+
+`useTransition` is a **React 18 concurrency hook**.
+
+It allows you to mark something as a **non-urgent state update** (a transition).
+
+When you wrap your Server Action in `startTransition()`:
+
+* React keeps the UI responsive
+* React tracks the async work
+* React exposes `isPending`
+* Next.js integrates this seamlessly with Server Actions
+
+So we get:
+
+```js
+const [isPending, startTransition] = useTransition();
+```
+
+* `isPending` → true while action runs
+* `startTransition()` → wraps the async call
+
+---
+
+## 3️⃣ Full Clean Implementation
+
+### ✅ Client Component
+
+```jsx
+"use client";
+
+import { useTransition } from "react";
+import { deleteReservation } from "@/lib/actions";
+import SpinnerMini from "./SpinnerMini";
+import { TrashIcon } from "@heroicons/react/24/outline";
+
+function DeleteReservation({ bookingId }) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleDelete() {
+    if (!confirm("Are you sure you want to delete this reservation?")) return;
+
+    startTransition(() => {
+      deleteReservation(bookingId);
+    });
+  }
+
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={isPending}
+      className="flex items-center gap-2 text-red-600"
+    >
+      {!isPending ? (
+        <>
+          <TrashIcon className="w-5 h-5" />
+          <span>Delete</span>
+        </>
+      ) : (
+        <SpinnerMini />
+      )}
+    </button>
+  );
+}
+
+export default DeleteReservation;
+```
+
+---
+
+## 4️⃣ Why You Can’t Call the Action Directly
+
+❌ This is wrong:
+
+```jsx
+onClick={() => deleteReservation(bookingId)}
+```
+
+Because:
+
+* React doesn’t treat it as a transition
+* You get no pending state
+* UI feedback becomes difficult
+* You lose concurrency benefits
+
+Instead:
+
+```jsx
+startTransition(() => {
+  deleteReservation(bookingId);
+});
+```
+
+This tells React:
+
+> “This update may take time — treat it as background work.”
+
+---
+
+## 5️⃣ What Happens Internally
+
+1. User clicks delete
+2. `startTransition()` marks work as low priority
+3. Server Action executes
+4. `isPending` becomes `true`
+5. Button re-renders with spinner
+6. Server finishes
+7. Cache revalidates
+8. UI updates
+9. `isPending` becomes `false`
+
+---
+
+## 6️⃣ Mental Model: When to Use What
+
+| Scenario                       | Use                                   |
+| ------------------------------ | ------------------------------------- |
+| `<form action={serverAction}>` | `useFormStatus()`                     |
+| Button with `onClick`          | `useTransition()`                     |
+| Navigation                     | `useTransition()` (built-in)          |
+| Optimistic UI                  | `useOptimistic()` + `useTransition()` |
+
+---
+
+## 7️⃣ Important Subtlety (Advanced Insight)
+
+`useTransition` does **not** make the server action faster.
+
+It changes:
+
+* React scheduling
+* Rendering priority
+* UI responsiveness
+
+That’s why it’s called a **concurrent feature**, not a loading hook.
+
+The loading state is just a convenient side effect.
+
+---
+
+## 8️⃣ How This Connects to the Next Lecture
+
+In the next step, you’ll combine:
+
+```js
+useOptimistic()
++
+useTransition()
+```
+
+Which gives you:
+
+* Immediate UI removal (optimistic)
+* Background server confirmation
+* Automatic rollback on error
+
+That’s when the UX becomes truly smooth.
+
+---
+
+# Final Summary
+
+✔ `useFormStatus` → only works in forms
+✔ `useTransition` → for button-triggered Server Actions
+✔ Wrap Server Actions inside `startTransition()`
+✔ Use `isPending` to render spinners
+✔ Keeps UI responsive during async work
+
+---
