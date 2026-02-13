@@ -1849,3 +1849,291 @@ This is the same UX pattern used in:
 | Sluggish feel      | Native-app feel    |
 
 ---
+
+# Finishing the Date Selector
+
+---
+
+# 1️⃣ The Real Goal
+
+We’re connecting three things:
+
+1. 📅 Date range selection
+2. 🚫 Overlap validation
+3. 💰 Real-time price calculation
+
+The moment the user selects valid dates, they should immediately see:
+
+* Number of nights
+* Price per night
+* Total price
+* Discount breakdown (if applicable)
+
+No extra clicks.
+
+---
+
+# 2️⃣ Component Responsibility
+
+`DateSelector` is a:
+
+* ✅ Client Component
+* ✅ Reads global reservation state
+* ✅ Calculates derived values
+* ✅ Validates against booked dates
+
+It receives:
+
+```js
+{
+  settings,      // min/max booking rules
+  bookedDates,   // disabled dates
+  cabin          // price + discount
+}
+```
+
+And it reads `range` from:
+
+```js
+useReservation()
+```
+
+---
+
+# 3️⃣ Overlap Validation (Critical Logic)
+
+### The Problem
+
+The calendar might allow:
+
+```
+Start → (booked date inside) → End
+```
+
+Even if the booked date is visually disabled, the user can sometimes wrap around it.
+
+So we must validate manually.
+
+---
+
+## Helper Function
+
+```js
+import { eachDayOfInterval, isSameDay } from "date-fns";
+
+export function isAlreadyBooked(range, bookedDates) {
+  if (!range?.from || !range?.to) return false;
+
+  const selectedDates = eachDayOfInterval({
+    start: range.from,
+    end: range.to,
+  });
+
+  return selectedDates.some((date) =>
+    bookedDates.some((booked) =>
+      isSameDay(date, new Date(booked))
+    )
+  );
+}
+```
+
+---
+
+## useEffect Validation
+
+Inside `DateSelector`:
+
+```jsx
+useEffect(() => {
+  if (!range?.from || !range?.to) return;
+
+  if (isAlreadyBooked(range, bookedDates)) {
+    resetRange();
+  }
+}, [range, bookedDates, resetRange]);
+```
+
+### What happens?
+
+1. User selects range
+2. Effect runs
+3. If overlap detected → selection resets instantly
+
+User is forced to try again.
+
+---
+
+# 4️⃣ Derived State (No Extra useState!)
+
+We DO NOT store:
+
+```js
+const [numNights, setNumNights] = useState(...)
+```
+
+Instead we compute directly during render.
+
+---
+
+## Calculations
+
+```js
+import { differenceInDays } from "date-fns";
+
+const numNights =
+  range?.from && range?.to
+    ? differenceInDays(range.to, range.from)
+    : 0;
+
+const pricePerNight = cabin.regularPrice - cabin.discount;
+
+const totalPrice = numNights * pricePerNight;
+```
+
+---
+
+# Why Derived State Is Better
+
+* No sync bugs
+* No stale state
+* Always accurate
+* Cleaner logic
+
+If inputs change → recalculates automatically.
+
+---
+
+# 5️⃣ Conditional Rendering Logic
+
+Now we change UI based on selection.
+
+---
+
+## No Dates Selected
+
+```jsx
+<p>
+  Select dates (minimum {settings.minBookingLength} nights)
+</p>
+```
+
+---
+
+## Valid Selection
+
+```jsx
+<div>
+  <p className="text-lg font-semibold">
+    ${totalPrice}
+  </p>
+
+  <p>
+    {numNights} night{numNights > 1 && "s"} × ${pricePerNight}
+  </p>
+
+  {cabin.discount > 0 && (
+    <p className="line-through text-gray-500">
+      ${cabin.regularPrice} / night
+    </p>
+  )}
+</div>
+```
+
+---
+
+# 6️⃣ Full Simplified Component Structure
+
+```jsx
+"use client";
+
+import { useEffect } from "react";
+import { differenceInDays } from "date-fns";
+import { useReservation } from "@/hooks/useReservation";
+import { isAlreadyBooked } from "@/utils/helpers";
+
+function DateSelector({ settings, bookedDates, cabin }) {
+  const { range, setRange, resetRange } = useReservation();
+
+  useEffect(() => {
+    if (!range?.from || !range?.to) return;
+
+    if (isAlreadyBooked(range, bookedDates)) {
+      resetRange();
+    }
+  }, [range, bookedDates, resetRange]);
+
+  const numNights =
+    range?.from && range?.to
+      ? differenceInDays(range.to, range.from)
+      : 0;
+
+  const pricePerNight = cabin.regularPrice - cabin.discount;
+  const totalPrice = numNights * pricePerNight;
+
+  return (
+    <div>
+      {/* Calendar Component Here */}
+
+      {!range?.from || !range?.to ? (
+        <p>
+          Select dates (minimum {settings.minBookingLength} nights)
+        </p>
+      ) : (
+        <div>
+          <p className="text-lg font-semibold">
+            ${totalPrice}
+          </p>
+
+          <p>
+            {numNights} nights × ${pricePerNight}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default DateSelector;
+```
+
+---
+
+# 7️⃣ What This Achieves
+
+✔ Immediate feedback
+✔ Prevents invalid bookings
+✔ Displays live pricing
+✔ Handles discounts cleanly
+✔ Keeps logic deterministic
+
+---
+
+# 8️⃣ Why This Is Architecturally Clean
+
+We separated:
+
+| Concern                | Where          |
+| ---------------------- | -------------- |
+| Date picking           | Calendar       |
+| Global selection state | useReservation |
+| Validation             | useEffect      |
+| Pricing math           | Derived state  |
+| Booking rules          | settings       |
+| Availability           | bookedDates    |
+
+That’s clean UI architecture.
+
+---
+
+# 9️⃣ Final Mental Model
+
+This component is now:
+
+> A deterministic function of
+> (range + settings + cabin + bookedDates)
+
+No hidden side effects.
+No duplicated state.
+No unnecessary re-renders.
+
+---
