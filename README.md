@@ -1,10 +1,13 @@
-# Tourmate Website
+# Tourmate
 
-Customer-facing site for Tourmate (It's a learning project), built with Next.js 14 (App Router), Tailwind CSS, Supabase, and Auth.js (NextAuth v5 beta).
+Customer-facing website for a hotel management experience (learning project), built with Next.js 14 (App Router), Tailwind CSS, Supabase, and Auth.js (NextAuth v5 beta).
 
-This README is the entry point (run locally + where to find docs). Longer guides live in `docs/`.
+Inspired by the Wild Oasis website from Jonas Schmedtmann’s Ultimate React Course:
+<https://github.com/jonasschmedtmann/ultimate-react-course>
 
-Live:  <https://tourmate-iota.vercel.app/>
+This README is the entry point (how to run locally + where to find documentation). Longer guides live in `docs/`.
+
+Live demo: <https://tourmate-iota.vercel.app/>
 
 ## Table of contents
 
