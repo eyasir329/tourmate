@@ -9,8 +9,20 @@ This README is the entry point (how to run locally + where to find documentation
 
 Live demo: <https://tourmate-iota.vercel.app/>
 
+## Features
+
+- **Browse cabins** – view all available cabins with descriptions, pricing, and capacity on the `/cabins` listing page.
+- **Cabin detail & availability** – each cabin has its own page showing photos, a text description, and a date-picker that blocks already-booked dates.
+- **Create a reservation** – authenticated users can pick a date range and submit a booking directly from the cabin detail page.
+- **Manage reservations** – the `/account/reservations` page lists all upcoming and past stays; users can edit or delete any of their own reservations.
+- **Profile management** – the `/account/profile` page lets users update their personal details (name, nationality, national-ID, etc.).
+- **Google OAuth sign-in** – one-click sign-in via Google; new users are automatically registered as guests in the database.
+- **Protected account area** – middleware redirects unauthenticated visitors away from `/account` routes.
+- **REST API endpoint** – `GET /api/cabins/[cabinid]` returns cabin details and booked dates as JSON.
+
 ## Table of contents
 
+- [Features](#features)
 - [Getting started](#getting-started)
   - [Requirements](#requirements)
   - [Quick start](#quick-start)
